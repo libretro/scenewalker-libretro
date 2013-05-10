@@ -2,6 +2,8 @@
 
 namespace GL
 {
+   bool dead_state;
+
    static SymMap map;
    SymMap& symbol_map()
    {

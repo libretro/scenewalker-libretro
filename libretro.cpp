@@ -1,6 +1,7 @@
 #include "libretro.h"
 #include "gl.hpp"
 #include "mesh.hpp"
+#include "object.hpp"
 #include <cstring>
 #include <string>
 #include <iostream>
@@ -11,9 +12,7 @@ using namespace glm;
 static struct retro_hw_render_callback hw_render;
 static std::string mesh_path;
 
-static std::shared_ptr<Mesh> mesh;
-static std::shared_ptr<Texture> texture;
-static std::shared_ptr<Shader> shader;
+static std::vector<std::shared_ptr<Mesh>> meshes;
 
 void retro_init(void)
 {}
@@ -95,31 +94,25 @@ void retro_run(void)
    SYM(glClearColor)(0.2f, 0.2f, 0.2f, 1.0f);
    SYM(glClear)(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    SYM(glEnable)(GL_DEPTH_TEST);
+   SYM(glFrontFace)(GL_CW); // When we flip vertically, orientation changes.
+   SYM(glEnable)(GL_CULL_FACE);
+   SYM(glEnable)(GL_BLEND);
 
    SYM(glViewport)(0, 0, 640, 480);
 
-   mesh->render();
+   for (auto& mesh : meshes)
+      mesh->render();
+
+   SYM(glDisable)(GL_BLEND);
+
+   //auto error = SYM(glGetError)();
+   //std::cerr << "GL error: " << error << std::endl;
 
    video_cb(RETRO_HW_FRAME_BUFFER_VALID, 640, 480, 0);
 }
 
-static void init_mesh(const std::string&)
+static void init_mesh(const std::string& path)
 {
-   std::vector<Vertex> triangle = {
-      {
-         { -0.5, -0.5, 0.0 }, { 0.0, 0.0, 1.0 }, { 0.0, 0.0 }
-      },
-      {
-         { +0.5, -0.5, 0.0 }, { 0.0, 0.0, 1.0 }, { 1.0, 0.0 }
-      },
-      {
-         { +0.0, +0.5, 0.0 }, { 0.0, 0.0, 1.0 }, { 0.5, 1.0 }
-      },
-   };
-
-   mesh = std::make_shared<Mesh>();
-   mesh->set_vertices(std::move(triangle));
-
    static const std::string vertex_shader =
       "uniform mat4 uModel;\n"
       "uniform mat4 uMVP;\n"
@@ -128,30 +121,51 @@ static void init_mesh(const std::string&)
       "attribute vec2 aTex;\n"
       "varying vec4 vNormal;\n"
       "varying vec2 vTex;\n"
+      "varying vec4 vPos;\n"
       "void main() {\n"
       "  gl_Position = uMVP * aVertex;\n"
-      "  vTex = aTex;\n"
+      "  vTex = vec2(aTex.x, 1.0 - aTex.y);\n"
+      "  vPos = uModel * aVertex;\n"
       "  vNormal = uModel * vec4(aNormal, 0.0);\n"
       "}";
 
    static const std::string fragment_shader =
       "varying vec2 vTex;\n"
       "varying vec4 vNormal;\n"
+      "varying vec4 vPos;\n"
+      "uniform sampler2D sTexture;\n"
       "void main() {\n"
-      "  gl_FragColor = vec4(0.5);\n"
+      "  vec4 color = texture2D(sTexture, vTex);\n"
+      "  vec3 normal = normalize(vNormal.xyz);\n"
+      "  vec3 dist = vPos.xyz - vec3(20.0, 40.0, -30.0);\n"
+      "  float directivity = dot(normalize(dist), -normal);\n"
+      "  float diffuse = clamp(directivity, 0.0, 1.0) + 0.4;\n"
+      "  gl_FragColor = vec4(diffuse * color.rgb, color.a);\n"
       "}";
 
-   shader = std::make_shared<Shader>(vertex_shader, fragment_shader);
-   mesh->set_shader(shader);
+   auto shader = std::make_shared<Shader>(vertex_shader, fragment_shader);
 
-   mesh->set_projection(scale(mat4(1.0), vec3(1, -1, 1)));
+   meshes = OBJ::load_from_file(path);
+
+   mat4 translation = translate(mat4(1.0), vec3(0, 0, -40));
+   mat4 scaler = scale(translation, vec3(15, 15, 15));
+   mat4 rotater = rotate(scaler, 0.0f, vec3(0, 1, 0));
+   mat4 projection = scale(perspective(45.0f, 640.0f / 480.0f, 1.0f, 100.0f),
+         vec3(1, -1, 1));
+
+   for (auto& mesh : meshes)
+   {
+      mesh->set_model(rotater);
+      mesh->set_projection(projection);
+      mesh->set_shader(shader);
+   }
 }
 
 static void context_reset(void)
 {
-   mesh.reset();
-   texture.reset();
-   shader.reset();
+   dead_state = true;
+   meshes.clear();
+   dead_state = false;
 
    GL::set_function_cb(hw_render.get_proc_address);
    GL::init_symbol_map();
@@ -184,7 +198,9 @@ bool retro_load_game(const struct retro_game_info *info)
 }
 
 void retro_unload_game(void)
-{}
+{
+   dead_state = true;
+}
 
 unsigned retro_get_region(void)
 {

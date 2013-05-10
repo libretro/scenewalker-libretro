@@ -1,5 +1,7 @@
 #include "mesh.hpp"
 
+using namespace glm;
+
 namespace GL
 {
    Mesh::Mesh() : 
@@ -13,17 +15,26 @@ namespace GL
    }
 
    Mesh::~Mesh()
-   {}
-
-   void Mesh::set_vertices(std::vector<Vertex> vertex, GLenum type)
    {
-      set_vertices(std::make_shared<std::vector<Vertex>>(std::move(vertex)), type);
+      if (dead_state)
+         return;
+
+      SYM(glDeleteBuffers)(1, &vbo);
    }
 
-   void Mesh::set_vertices(const std::shared_ptr<std::vector<Vertex>>& vertex, GLenum type)
+   void Mesh::set_vertices(std::vector<Vertex> vertex)
+   {
+      set_vertices(std::make_shared<std::vector<Vertex>>(std::move(vertex)));
+   }
+
+   void Mesh::set_vertex_type(GLenum type)
+   {
+      vertex_type = type;
+   }
+
+   void Mesh::set_vertices(const std::shared_ptr<std::vector<Vertex>>& vertex)
    {
       this->vertex = vertex;
-      vertex_type = type;
 
       SYM(glBindBuffer)(GL_ARRAY_BUFFER, vbo);
       SYM(glBufferData)(GL_ARRAY_BUFFER, vertex->size() * sizeof(Vertex),
@@ -69,10 +80,12 @@ namespace GL
 
       shader->use();
 
+      SYM(glUniform1i)(shader->uniform("sTexture"), 0);
+
       SYM(glUniformMatrix4fv)(shader->uniform("uModel"),
-            1, GL_FALSE, &model[0][0]);
+            1, GL_FALSE, value_ptr(model));
       SYM(glUniformMatrix4fv)(shader->uniform("uMVP"),
-            1, GL_FALSE, &mvp[0][0]);
+            1, GL_FALSE, value_ptr(mvp));
 
       GLint aVertex = shader->attrib("aVertex");
       GLint aNormal = shader->attrib("aNormal");

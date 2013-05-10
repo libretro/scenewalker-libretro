@@ -1,4 +1,5 @@
 #include "shader.hpp"
+#include <vector>
 
 namespace GL
 {
@@ -9,9 +10,27 @@ namespace GL
       GLuint vertex = compile_shader(GL_VERTEX_SHADER, vertex_src);
       GLuint frag = compile_shader(GL_FRAGMENT_SHADER, fragment_src);
 
-      SYM(glAttachShader)(prog, vertex);
-      SYM(glAttachShader)(prog, frag);
+      if (vertex)
+         SYM(glAttachShader)(prog, vertex);
+      if (frag)
+         SYM(glAttachShader)(prog, frag);
+
       SYM(glLinkProgram)(prog);
+      GLint status = 0;
+      SYM(glGetProgramiv)(prog, GL_LINK_STATUS, &status);
+      if (!status)
+      {
+         GLint len = 0;
+         SYM(glGetProgramiv)(prog, GL_INFO_LOG_LENGTH, &len);
+
+         if (len > 0)
+         {
+            std::vector<char> buf(len);
+            GLsizei out_len;
+            SYM(glGetProgramInfoLog)(prog, len, &out_len, buf.data());
+            std::cerr << "Link error: " << buf.data() << std::endl;
+         }
+      }
    }
 
    GLuint Shader::compile_shader(GLenum type, const std::string& source)
@@ -22,12 +41,44 @@ namespace GL
       SYM(glShaderSource)(shader, 1, &src, nullptr);
       SYM(glCompileShader)(shader);
 
+      GLint status = 0;
+      SYM(glGetShaderiv)(shader, GL_COMPILE_STATUS, &status);
+      if (!status)
+      {
+         GLint len = 0;
+         SYM(glGetShaderiv)(shader, GL_INFO_LOG_LENGTH, &len);
+
+         if (len > 0)
+         {
+            std::vector<char> buf(len);
+            GLsizei out_len;
+            SYM(glGetShaderInfoLog)(shader, len, &out_len, buf.data());
+            std::cerr << "Shader error: " << buf.data() << std::endl;
+         }
+
+         SYM(glDeleteShader)(shader);
+         return 0;
+      }
+
       return shader;
    }
 
    Shader::~Shader()
    {
-      // Don't release shader.
+      if (dead_state)
+         return;
+
+      GLsizei count;
+      GLuint shaders[2];
+
+      SYM(glGetAttachedShaders)(prog, 2, &count, shaders);
+      for (GLsizei i = 0; i < count; i++)
+      {
+         SYM(glDetachShader)(prog, shaders[i]);
+         SYM(glDeleteShader)(shaders[i]);
+      }
+
+      SYM(glDeleteProgram)(prog);
    }
 
    void Shader::use()

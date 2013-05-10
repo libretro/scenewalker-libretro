@@ -9,14 +9,15 @@
 #include <memory>
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 namespace GL
 {
    struct Vertex
    {
-      GLfloat vert[3];
-      GLfloat normal[3];
-      GLfloat tex[2];
+      glm::vec3 vert;
+      glm::vec3 normal;
+      glm::vec2 tex;
    };
 
    class Mesh
@@ -25,9 +26,9 @@ namespace GL
          Mesh();
          ~Mesh();
 
-         void set_vertices(std::vector<Vertex> vertex, GLenum vertex_type = GL_TRIANGLES);
-         void set_vertices(const std::shared_ptr<std::vector<Vertex>>& vertex,
-               GLenum vertex_type = GL_TRIANGLES);
+         void set_vertices(std::vector<Vertex> vertex);
+         void set_vertices(const std::shared_ptr<std::vector<Vertex>>& vertex);
+         void set_vertex_type(GLenum type);
          void set_texture(const std::shared_ptr<Texture>& tex);
          void set_shader(const std::shared_ptr<Shader>& shader);
 

@@ -47,7 +47,12 @@ namespace GL
    }
 
    Texture::~Texture()
-   {}
+   {
+      if (dead_state)
+         return;
+
+      SYM(glDeleteTextures)(1, &tex);
+   }
 
    void Texture::bind(unsigned unit)
    {
