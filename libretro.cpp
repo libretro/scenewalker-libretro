@@ -230,7 +230,7 @@ static void init_mesh(const string& path)
       "uniform sampler2D sDiffuse;\n"
 
       "uniform vec3 uLightDir;\n"
-      "uniform float uLightAmbient;\n"
+      "uniform vec3 uLightAmbient;\n"
       "uniform vec3 uMTLAmbient;\n"
       "uniform vec3 uMTLDiffuse;\n"
 
@@ -239,10 +239,9 @@ static void init_mesh(const string& path)
       "  float directivity = dot(uLightDir, -normal);\n"
 
       "  vec4 colorDiffuse = texture2D(sDiffuse, vTex);\n"
-      "  vec3 diffuse = clamp(colorDiffuse.rgb * directivity, vec3(0.0), vec3(1.0));\n"
-      "  vec3 ambient = uLightAmbient * uMTLAmbient;\n"
+      "  vec3 diffuse = colorDiffuse.rgb * (clamp(directivity, 0.0, 1.0) + uLightAmbient * uMTLAmbient);\n"
 
-      "  gl_FragColor = vec4(diffuse + ambient, colorDiffuse.a);\n"
+      "  gl_FragColor = vec4(diffuse, colorDiffuse.a);\n"
       "}";
 
    std1::shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));

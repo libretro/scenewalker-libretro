@@ -16,8 +16,6 @@ namespace GL
    {
       SYM(glGenBuffers)(1, &vbo);
       mvp = projection * view * model;
-      material.ambient = vec3(1, 1, 1);
-      material.diffuse = vec3(1, 1, 1);
    }
 
    Mesh::~Mesh()
