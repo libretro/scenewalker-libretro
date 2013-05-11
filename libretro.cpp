@@ -130,6 +130,9 @@ static void init_mesh(const std::string& path)
       "}";
 
    static const std::string fragment_shader =
+      "#ifdef GL_ES\n"
+      "precision mediump float;\n"
+      "#endif\n"
       "varying vec2 vTex;\n"
       "varying vec4 vNormal;\n"
       "varying vec4 vPos;\n"
