@@ -2,6 +2,7 @@
 #include "gl.hpp"
 #include "mesh.hpp"
 #include "object.hpp"
+#include "util.hpp"
 #include <cstring>
 #include <string>
 #include <iostream>
@@ -15,6 +16,8 @@ using namespace std;
 #define BASE_HEIGHT 240
 #define MAX_WIDTH (BASE_WIDTH * 6)
 #define MAX_HEIGHT (BASE_HEIGHT * 6)
+static unsigned width = BASE_WIDTH;
+static unsigned height = BASE_HEIGHT;
 
 static struct retro_hw_render_callback hw_render;
 static string mesh_path;
@@ -66,6 +69,14 @@ static retro_input_state_t input_state_cb;
 void retro_set_environment(retro_environment_t cb)
 {
    environ_cb = cb;
+
+   retro_variable variables[] = {
+      { "modelviewer_resolution",
+         "Internal resolution; 320x240|640x480|960x720|1280x960|1600x1200|1920x1440" },
+      { nullptr, nullptr },
+   };
+
+   cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
 }
 
 void retro_set_audio_sample(retro_audio_sample_t cb)
@@ -135,9 +146,29 @@ static void handle_input()
       mesh->set_model(model);
 }
 
+static void update_variables()
+{
+   retro_variable var{};
+   var.key = "modelviewer_resolution";
+
+   if (!environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) || !var.value)
+      return;
+
+   auto list = String::split(var.value, "x");
+   if (list.size() != 2)
+      return;
+
+   width = String::stoi(list[0]);
+   height = String::stoi(list[1]);
+}
+
 void retro_run(void)
 {
    handle_input();
+
+   bool updated = false;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated))
+      update_variables();
 
    SYM(glBindFramebuffer)(GL_FRAMEBUFFER, hw_render.get_current_framebuffer());
    SYM(glClearColor)(0.2f, 0.2f, 0.2f, 1.0f);
@@ -147,8 +178,7 @@ void retro_run(void)
    SYM(glEnable)(GL_CULL_FACE);
    SYM(glEnable)(GL_BLEND);
 
-   // Make this a core option later.
-   SYM(glViewport)(0, 0, MAX_WIDTH, MAX_HEIGHT);
+   SYM(glViewport)(0, 0, width, height);
 
    for (auto& mesh : meshes)
       mesh->render();
@@ -157,7 +187,7 @@ void retro_run(void)
    SYM(glDisable)(GL_DEPTH_TEST);
    SYM(glDisable)(GL_CULL_FACE);
    SYM(glBindFramebuffer)(GL_FRAMEBUFFER, 0);
-   video_cb(RETRO_HW_FRAME_BUFFER_VALID, MAX_WIDTH, MAX_HEIGHT, 0);
+   video_cb(RETRO_HW_FRAME_BUFFER_VALID, width, height, 0);
 }
 
 static void init_mesh(const string& path)
@@ -241,6 +271,7 @@ bool retro_load_game(const struct retro_game_info *info)
       return false;
 
    mesh_path = info->path;
+   update_variables();
    return true;
 }
 
