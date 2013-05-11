@@ -28,7 +28,10 @@ namespace GL
             std::vector<char> buf(len);
             GLsizei out_len;
             SYM(glGetProgramInfoLog)(prog, len, &out_len, buf.data());
-            std::cerr << "Link error: " << buf.data() << std::endl;
+
+            char err_str[256];
+            snprintf(err_str, sizeof(err_str), "Link error: %s", buf.data());
+            retro_stderr(err_str);
          }
       }
    }
@@ -53,7 +56,10 @@ namespace GL
             std::vector<char> buf(len);
             GLsizei out_len;
             SYM(glGetShaderInfoLog)(shader, len, &out_len, buf.data());
-            std::cerr << "Shader error: " << buf.data() << std::endl;
+
+            char err_str[256];
+            snprintf(err_str, sizeof(err_str), "Shader error: %s", buf.data());
+            retro_stderr(err_str);
          }
 
          SYM(glDeleteShader)(shader);

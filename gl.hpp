@@ -17,6 +17,7 @@
 #include <map>
 #include <iostream>
 #include "libretro.h"
+#include "shared.hpp"
 
 #ifdef __GNUC__
 #define decltype(type) typeof(type)
@@ -51,7 +52,11 @@ namespace GL
       {
          func = get_symbol(sym);
          if (!func)
-            std::cerr << "Didn't find GL symbol: " << sym << std::endl;
+         {
+            char err_str[256];
+            snprintf(err_str, sizeof(err_str), "Didnt' find GL symbol: %s", sym.c_str());
+            retro_stderr(err_str);
+         }
       }
 
       return reinterpret_cast<Func>(func);

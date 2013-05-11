@@ -7,8 +7,11 @@
 
 #ifdef _WIN32
 #include <memory>
+#define snprintf _snprintf
 #else
 #include <tr1/memory>
 #endif
+
+void retro_stderr(const char *str);
 
 #endif

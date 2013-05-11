@@ -43,7 +43,11 @@ namespace GL
          free(data);
       }
       else
-         std::cerr << "Failed to load image: " << path << std::endl;
+      {
+         char err_str[256];
+         snprintf(err_str, sizeof(err_str), "Failed to load image: %s", path.c_str());
+         retro_stderr(err_str);
+      }
    }
 
    Texture::~Texture()

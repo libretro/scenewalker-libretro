@@ -68,6 +68,15 @@ static retro_environment_t environ_cb;
 static retro_input_poll_t input_poll_cb;
 static retro_input_state_t input_state_cb;
 
+void retro_stderr(const char *str)
+{
+#ifdef _WIN32
+   OutputDebugStringA(str);
+#else
+   std::cerr << var << endl;
+#endif
+}
+
 void retro_set_environment(retro_environment_t cb)
 {
    environ_cb = cb;
@@ -257,7 +266,7 @@ bool retro_load_game(const struct retro_game_info *info)
    enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
    if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
    {
-      cerr << "XRGB8888 is not supported." << endl;
+      retro_stderr("XRGB8888 is not supported.");
       return false;
    }
 
