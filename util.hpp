@@ -2,6 +2,7 @@
 #define UTIL_HPP__
 
 #include <string>
+#include <cstdlib>
 
 namespace Path
 {
@@ -43,6 +44,29 @@ namespace String
 
       return list;
    }
+
+#define GCC_VERSION (__GNUC__ * 10000 + __GNUC__MINOR__ * 100)
+#if GCC_VERSION < 40700
+   inline int stoi(const std::string& str)
+   {
+      return std::strtol(str.c_str(), nullptr, 0);
+   }
+
+   inline float stof(const std::string& str)
+   {
+      return std::strtod(str.c_str(), nullptr);
+   }
+#else
+   inline int stoi(const std::string& str)
+   {
+      return std::stoi(str);
+   }
+
+   inline float stof(const std::string& str)
+   {
+      return std::stof(str);
+   }
+#endif
 }
 
 

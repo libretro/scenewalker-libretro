@@ -21,8 +21,8 @@ namespace OBJ
       auto split = String::split(data, " ");
       if (split.size() >= 2)
       {
-         x = stof(split[0]);
-         y = stof(split[1]);
+         x = String::stof(split[0]);
+         y = String::stof(split[1]);
       }
 
       return vec2(x, y);
@@ -35,9 +35,9 @@ namespace OBJ
       auto split = String::split(data, " ");
       if (split.size() >= 3)
       {
-         x = stof(split[0]);
-         y = stof(split[1]);
-         z = stof(split[2]);
+         x = String::stof(split[0]);
+         y = String::stof(split[1]);
+         z = String::stof(split[2]);
       }
       return vec3(x, y, z);
    }
@@ -65,15 +65,15 @@ namespace OBJ
          auto coords = String::split(vert, "/", true);
          if (coords.size() == 1) // Vertex only
          {
-            size_t coord = translate_index(stoi(coords[0]), vertex.size());
+            size_t coord = translate_index(String::stoi(coords[0]), vertex.size());
 
             if (coord && vertex.size() >= coord)
                out_vertex.vert = vertex[coord - 1];
          }
          else if (coords.size() == 2) // Vertex/Texcoord
          {
-            size_t coord_vert = translate_index(stoi(coords[0]), vertex.size());
-            size_t coord_tex  = translate_index(stoi(coords[1]), tex.size());
+            size_t coord_vert = translate_index(String::stoi(coords[0]), vertex.size());
+            size_t coord_tex  = translate_index(String::stoi(coords[1]), tex.size());
 
             if (coord_vert && vertex.size() >= coord_vert)
                out_vertex.vert = vertex[coord_vert - 1];
@@ -82,9 +82,9 @@ namespace OBJ
          }
          else if (coords.size() == 3 && coords[1].size()) // Vertex/Texcoord/Normal
          {
-            size_t coord_vert   = translate_index(stoi(coords[0]), vertex.size());
-            size_t coord_tex    = translate_index(stoi(coords[1]), tex.size());
-            size_t coord_normal = translate_index(stoi(coords[2]), normal.size());
+            size_t coord_vert   = translate_index(String::stoi(coords[0]), vertex.size());
+            size_t coord_tex    = translate_index(String::stoi(coords[1]), tex.size());
+            size_t coord_normal = translate_index(String::stoi(coords[2]), normal.size());
 
             if (coord_vert && vertex.size() >= coord_vert)
                out_vertex.vert = vertex[coord_vert - 1];
@@ -95,8 +95,8 @@ namespace OBJ
          }
          else if (coords.size() == 3 && !coords[1].size()) // Vertex//Normal
          {
-            size_t coord_vert   = translate_index(stoi(coords[0]), vertex.size());
-            size_t coord_normal = translate_index(stoi(coords[2]), normal.size());
+            size_t coord_vert   = translate_index(String::stoi(coords[0]), vertex.size());
+            size_t coord_normal = translate_index(String::stoi(coords[2]), normal.size());
 
             if (coord_vert && vertex.size() >= coord_vert)
                out_vertex.vert = vertex[coord_vert - 1];
