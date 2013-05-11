@@ -15,8 +15,8 @@ endif
 ifeq ($(platform), unix)
    TARGET := libretro.so
    fpic := -fPIC
-   SHARED := -lz -shared -Wl,--version-script=link.T -Wl,--no-undefined
-   GL_LIB := -lGL
+   SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
+   GL_LIB := -lGL -lz
 else ifeq ($(platform), osx)
    TARGET := libretro.dylib
    fpic := -fPIC
