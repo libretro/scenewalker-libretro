@@ -17,7 +17,7 @@
 #define RPNG_H__
 
 #include <stdint.h>
-#include <stdbool.h>
+#include "shared.hpp"
 
 #ifdef __cplusplus
 extern "C" {

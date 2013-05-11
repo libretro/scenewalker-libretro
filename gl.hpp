@@ -1,6 +1,10 @@
 #ifndef GL_HPP__
 #define GL_HPP__
 
+#if defined(_WIN32) && !defined(_XBOX)
+#include <windows.h>
+#endif
+
 #define GL_GLEXT_PROTOTYPES
 #if defined(GLES)
 #include <GLES2/gl2.h>

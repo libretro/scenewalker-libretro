@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <tr1/memory>
+#include "shared.hpp"
 
 namespace OBJ
 {

@@ -7,7 +7,7 @@
 #include <string>
 #include <iostream>
 #include <stdint.h>
-#include <tr1/memory>
+#include "shared.hpp"
 
 using namespace GL;
 using namespace glm;
