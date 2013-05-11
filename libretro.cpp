@@ -11,10 +11,10 @@ using namespace GL;
 using namespace glm;
 using namespace std;
 
-#define BASE_WIDTH 640
-#define BASE_HEIGHT 480
-#define MAX_WIDTH (BASE_WIDTH * 3)
-#define MAX_HEIGHT (BASE_HEIGHT * 3)
+#define BASE_WIDTH 320
+#define BASE_HEIGHT 240
+#define MAX_WIDTH (BASE_WIDTH * 6)
+#define MAX_HEIGHT (BASE_HEIGHT * 6)
 
 static struct retro_hw_render_callback hw_render;
 static string mesh_path;
