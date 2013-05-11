@@ -9,7 +9,7 @@
 
 namespace OBJ
 {
-   std::vector<std::tr1::shared_ptr<GL::Mesh> > load_from_file(const std::string& path);
+   std::vector<std1::shared_ptr<GL::Mesh> > load_from_file(const std::string& path);
 }
 
 #endif
