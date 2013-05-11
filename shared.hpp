@@ -8,7 +8,11 @@
 #include <tr1/memory>
 #endif
 
+#ifdef __QNX__
+namespace std1 = compat;
+#else
 namespace std1 = std::tr1;
+#endif
 
 void retro_stderr(const char *str);
 
