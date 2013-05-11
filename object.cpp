@@ -156,8 +156,7 @@ namespace OBJ
             if (!textures[data])
             {
                std::string texture_path = Path::join(Path::basedir(path), data + ".png");
-               // TODO //
-               //textures[data] = make_shared<Texture>(texture_path);
+               textures[data] = shared_ptr<Texture>(new Texture(texture_path));
             }
 
             current_texture = textures[data];
