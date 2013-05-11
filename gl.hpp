@@ -14,6 +14,10 @@
 #include <iostream>
 #include "libretro.h"
 
+#ifdef __GNUC__
+#define decltype(type) typeof(type)
+#endif
+
 #define SYM(sym) (::GL::symbol<decltype(&sym)>(#sym))
 
 namespace GL
@@ -36,9 +40,9 @@ namespace GL
    template<typename Func>
    inline Func symbol(const std::string& sym)
    {
-      auto& map = symbol_map();
+      std::map<std::string, retro_proc_address_t>& map = symbol_map();
       
-      auto& func = map[sym];
+      retro_proc_address_t func = map[sym];
       if (!func)
       {
          func = get_symbol(sym);

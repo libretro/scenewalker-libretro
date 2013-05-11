@@ -38,7 +38,7 @@ namespace GL
       GLuint shader = SYM(glCreateShader)(type);
 
       const char* src = source.c_str();
-      SYM(glShaderSource)(shader, 1, &src, nullptr);
+      SYM(glShaderSource)(shader, 1, &src, NULL);
       SYM(glCompileShader)(shader);
 
       GLint status = 0;
@@ -95,8 +95,8 @@ namespace GL
    {
       GLint ret = -1;
 
-      auto itr = map.find(sym);
-      if (itr == std::end(map))
+      std::map<std::string, GLint>::iterator itr = map.find(sym);
+      if (itr == map.end())
          map[sym] = ret = SYM(glGetUniformLocation)(prog, sym);
       else
          ret = itr->second;
@@ -108,8 +108,8 @@ namespace GL
    {
       GLint ret = -1;
 
-      auto itr = map.find(sym);
-      if (itr == std::end(map))
+      std::map<std::string, GLint>::iterator itr = map.find(sym);
+      if (itr == map.end())
          map[sym] = ret = SYM(glGetAttribLocation)(prog, sym);
       else
          ret = itr->second;

@@ -1,13 +1,13 @@
 #include "texture.hpp"
 #include "rpng.h"
-#include <cstdlib>
-#include <cstdint>
+#include <stdint.h>
+#include <stdlib.h>
 
 namespace GL
 {
    Texture::Texture(const std::string& path) : tex(0)
    {
-      std::uint32_t* data = nullptr;
+      uint32_t* data = NULL;
       unsigned width = 0, height = 0;
 
       bool ret = rpng_load_image_argb(path.c_str(),
@@ -40,7 +40,7 @@ namespace GL
                GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
          unbind();
-         std::free(data);
+         free(data);
       }
       else
          std::cerr << "Failed to load image: " << path << std::endl;

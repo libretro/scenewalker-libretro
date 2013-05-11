@@ -24,7 +24,7 @@ namespace GL
 
    void Mesh::set_vertices(std::vector<Vertex> vertex)
    {
-      set_vertices(std::make_shared<std::vector<Vertex>>(std::move(vertex)));
+      set_vertices(std::tr1::shared_ptr<std::vector<Vertex> >(new std::vector<Vertex>(vertex)));
    }
 
    void Mesh::set_vertex_type(GLenum type)
@@ -32,7 +32,7 @@ namespace GL
       vertex_type = type;
    }
 
-   void Mesh::set_vertices(const std::shared_ptr<std::vector<Vertex>>& vertex)
+   void Mesh::set_vertices(const std::tr1::shared_ptr<std::vector<Vertex> >& vertex)
    {
       this->vertex = vertex;
 
@@ -42,12 +42,12 @@ namespace GL
       SYM(glBindBuffer)(GL_ARRAY_BUFFER, 0);
    }
 
-   void Mesh::set_texture(const std::shared_ptr<Texture>& texture)
+   void Mesh::set_texture(const std::tr1::shared_ptr<Texture>& texture)
    {
       this->texture = texture;
    }
 
-   void Mesh::set_shader(const std::shared_ptr<Shader>& shader)
+   void Mesh::set_shader(const std::tr1::shared_ptr<Shader>& shader)
    {
       this->shader = shader;
    }

@@ -4,11 +4,13 @@
 #include <string>
 #include <cstdlib>
 
+#define DIR_BACK(string) (string[string.length()-1])
+
 namespace Path
 {
    inline std::string basedir(const std::string& path)
    {
-      auto last = path.find_last_of("/\\");
+      size_t last = path.find_last_of("/\\");
       if (last != std::string::npos)
          return path.substr(0, last);
       else
@@ -17,7 +19,7 @@ namespace Path
 
    inline std::string join(const std::string& dir, const std::string& path)
    {
-      char last = dir.size() ? dir.back() : '\0';
+      char last = dir.size() ? DIR_BACK(dir) : '\0';
       std::string sep;
       if (last != '/' && last != '\\')
          sep = "/";
@@ -50,7 +52,7 @@ namespace String
    inline int stoi(const std::string& str)
    {
 #if defined(__GNUC__) && (GCC_VERSION < 40700)
-      return std::strtol(str.c_str(), nullptr, 0);
+      return std::strtol(str.c_str(), NULL, 0);
 #else
       return std::stoi(str);
 #endif
@@ -59,7 +61,7 @@ namespace String
    inline float stof(const std::string& str)
    {
 #if defined(__GNUC__) && (GCC_VERSION < 40700)
-      return std::strtod(str.c_str(), nullptr);
+      return std::strtod(str.c_str(), NULL);
 #else
       return std::stof(str);
 #endif

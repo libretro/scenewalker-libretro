@@ -33,8 +33,8 @@ namespace GL
       };
 #undef _D
 
-      for (auto& bind : bind_map)
-         map[bind.sym] = bind.proc;
+      for (unsigned i = 0; i < sizeof(bind_map) / sizeof(bind_map[0]); i++)
+         map[bind_map[i].sym] = bind_map[i].proc;
    }
 
    static retro_hw_get_proc_address_t proc;

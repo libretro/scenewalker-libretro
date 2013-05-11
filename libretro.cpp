@@ -6,11 +6,13 @@
 #include <cstring>
 #include <string>
 #include <iostream>
-#include <cstdint>
+#include <stdint.h>
+#include <tr1/memory>
 
 using namespace GL;
 using namespace glm;
 using namespace std;
+using namespace std::tr1;
 
 #define BASE_WIDTH 320
 #define BASE_HEIGHT 240
@@ -22,7 +24,7 @@ static unsigned height = BASE_HEIGHT;
 static struct retro_hw_render_callback hw_render;
 static string mesh_path;
 
-static vector<shared_ptr<Mesh>> meshes;
+static vector<std::tr1::shared_ptr<Mesh> > meshes;
 
 void retro_init(void)
 {}
@@ -73,7 +75,7 @@ void retro_set_environment(retro_environment_t cb)
    retro_variable variables[] = {
       { "modelviewer_resolution",
          "Internal resolution; 320x240|640x480|960x720|1280x960|1600x1200|1920x1440" },
-      { nullptr, nullptr },
+      { NULL, NULL },
    };
 
    cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
@@ -142,19 +144,20 @@ static void handle_input()
 
    mat4 model = translation * scaler * rotate_x * rotate_y;
 
-   for (auto& mesh : meshes)
-      mesh->set_model(model);
+   for (unsigned i = 0; i < meshes.size(); i++)
+      meshes[i]->set_model(model);
 }
 
 static void update_variables()
 {
-   retro_variable var{};
+   retro_variable var;
    var.key = "modelviewer_resolution";
+   var.value = NULL;
 
    if (!environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) || !var.value)
       return;
 
-   auto list = String::split(var.value, "x");
+   std::vector<std::string> list = String::split(var.value, "x");
    if (list.size() != 2)
       return;
 
@@ -180,8 +183,8 @@ void retro_run(void)
 
    SYM(glViewport)(0, 0, width, height);
 
-   for (auto& mesh : meshes)
-      mesh->render();
+   for (unsigned i = 0; i < meshes.size(); i++)
+      meshes[i]->render();
 
    SYM(glDisable)(GL_BLEND);
    SYM(glDisable)(GL_DEPTH_TEST);
@@ -225,16 +228,15 @@ static void init_mesh(const string& path)
       "  gl_FragColor = vec4(diffuse * color.rgb, color.a);\n"
       "}";
 
-   auto shader = make_shared<Shader>(vertex_shader, fragment_shader);
-
+   std::tr1::shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
    meshes = OBJ::load_from_file(path);
 
    mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 640.0f / 480.0f, 1.0f, 100.0f);
 
-   for (auto& mesh : meshes)
+   for (unsigned i = 0; i < meshes.size(); i++)
    {
-      mesh->set_projection(projection);
-      mesh->set_shader(shader);
+      meshes[i]->set_projection(projection);
+      meshes[i]->set_shader(shader);
    }
 }
 
@@ -307,7 +309,7 @@ bool retro_unserialize(const void *, size_t)
 
 void *retro_get_memory_data(unsigned)
 {
-   return nullptr;
+   return NULL;
 }
 
 size_t retro_get_memory_size(unsigned)

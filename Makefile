@@ -15,8 +15,8 @@ endif
 ifeq ($(platform), unix)
    TARGET := libretro.so
    fpic := -fPIC
-   SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
-   GL_LIB := -lGL -lz
+   SHARED := -lz -shared -Wl,--version-script=link.T -Wl,--no-undefined
+   GL_LIB := -lGL
 else ifeq ($(platform), osx)
    TARGET := libretro.dylib
    fpic := -fPIC
@@ -42,7 +42,7 @@ SOURCES := $(wildcard *.cpp)
 CSOURCES := $(wildcard *.c)
 OBJECTS := $(SOURCES:.cpp=.o) $(CSOURCES:.c=.o)
 CFLAGS += -std=gnu99 -Wall $(fpic)
-CXXFLAGS += -std=gnu++0x -Wall $(fpic)
+CXXFLAGS += -std=gnu++03 -Wall $(fpic)
 
 ifeq ($(GLES), 1)
    CFLAGS += -DGLES

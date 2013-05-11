@@ -5,10 +5,11 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <tr1/memory>
 
 namespace OBJ
 {
-   std::vector<std::shared_ptr<GL::Mesh>> load_from_file(const std::string& path);
+   std::vector<std::tr1::shared_ptr<GL::Mesh> > load_from_file(const std::string& path);
 }
 
 #endif

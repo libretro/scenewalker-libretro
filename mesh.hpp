@@ -10,6 +10,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include <tr1/memory>
 
 namespace GL
 {
@@ -27,10 +28,10 @@ namespace GL
          ~Mesh();
 
          void set_vertices(std::vector<Vertex> vertex);
-         void set_vertices(const std::shared_ptr<std::vector<Vertex>>& vertex);
+         void set_vertices(const std::tr1::shared_ptr<std::vector<Vertex> >& vertex);
          void set_vertex_type(GLenum type);
-         void set_texture(const std::shared_ptr<Texture>& tex);
-         void set_shader(const std::shared_ptr<Shader>& shader);
+         void set_texture(const std::tr1::shared_ptr<Texture>& tex);
+         void set_shader(const std::tr1::shared_ptr<Shader>& shader);
 
          void set_model(const glm::mat4& model);
          void set_view(const glm::mat4& view);
@@ -41,9 +42,9 @@ namespace GL
       private:
          GLuint vbo;
          GLenum vertex_type;
-         std::shared_ptr<std::vector<Vertex>> vertex;
-         std::shared_ptr<Texture> texture;
-         std::shared_ptr<Shader> shader;
+         std::tr1::shared_ptr<std::vector<Vertex> > vertex;
+         std::tr1::shared_ptr<Texture> texture;
+         std::tr1::shared_ptr<Shader> shader;
 
          glm::mat4 model;
          glm::mat4 view;

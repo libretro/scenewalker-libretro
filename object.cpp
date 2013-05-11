@@ -8,6 +8,7 @@
 using namespace GL;
 using namespace glm;
 using namespace std;
+using namespace std::tr1;
 
 namespace OBJ
 {
@@ -18,7 +19,7 @@ namespace OBJ
    inline vec2 parse_line(const string& data)
    {
       float x = 0, y = 0;
-      auto split = String::split(data, " ");
+      std::vector<std::string> split = String::split(data, " ");
       if (split.size() >= 2)
       {
          x = String::stof(split[0]);
@@ -32,7 +33,7 @@ namespace OBJ
    inline vec3 parse_line(const string& data)
    {
       float x = 0, y = 0, z = 0;
-      auto split = String::split(data, " ");
+      std::vector<std::string> split = String::split(data, " ");
       if (split.size() >= 3)
       {
          x = String::stof(split[0]);
@@ -53,16 +54,16 @@ namespace OBJ
          const vector<vec3>& normal,
          const vector<vec2>& tex)
    {
-      auto vertices = String::split(data, " ");
+      std::vector<std::string> vertices = String::split(data, " ");
       if (vertices.size() > 3)
          vertices.resize(3);
 
-      vector<vector<string>> verts;
-      for (auto& vert : vertices)
+      vector<vector<string> > verts;
+      for (unsigned i = 0; i < vertices.size(); i++)
       {
-         Vertex out_vertex{};
+         Vertex out_vertex;
 
-         auto coords = String::split(vert, "/", true);
+         std::vector<std::string> coords = String::split(vertices[i], "/", true);
          if (coords.size() == 1) // Vertex only
          {
             size_t coord = translate_index(String::stoi(coords[0]), vertex.size());
@@ -108,10 +109,10 @@ namespace OBJ
       }
    }
 
-   vector<shared_ptr<Mesh>> load_from_file(const string& path)
+   vector<shared_ptr<Mesh> > load_from_file(const string& path)
    {
-      ifstream file(path, ios::in);
-      vector<shared_ptr<Mesh>> meshes;
+      ifstream file(path.c_str(), ios::in);
+      vector<shared_ptr<Mesh> > meshes;
       if (!file.is_open())
          return meshes;
 
@@ -122,16 +123,16 @@ namespace OBJ
       vector<Vertex> vertices;
 
       // Texture cache.
-      map<string, shared_ptr<Texture>> textures;
+      map<string, shared_ptr<Texture> > textures;
       shared_ptr<Texture> current_texture;
 
       for (string line; getline(file, line); )
       {
          line = line.substr(0, line.find_first_of('\r'));
 
-         auto split_point = line.find_first_of(' ');
-         auto type = line.substr(0, split_point);
-         auto data = split_point != string::npos ? line.substr(split_point + 1) : string();
+         size_t split_point = line.find_first_of(' ');
+         std::string type = line.substr(0, split_point);
+         std::string data = split_point != string::npos ? line.substr(split_point + 1) : string();
 
          if (type == "v")
             vertex.push_back(parse_line<vec3>(data));
@@ -145,27 +146,29 @@ namespace OBJ
          {
             if (vertices.size()) // Different texture, new mesh.
             {
-               auto mesh = make_shared<Mesh>();
-               mesh->set_vertices(move(vertices));
+               std::tr1::shared_ptr<Mesh> mesh(new Mesh());
+               mesh->set_vertices(vertices);
+               vertices.clear();
                mesh->set_texture(current_texture);
                meshes.push_back(mesh);
             }
 
-            auto& texture = textures[data];
-            if (!texture)
+            if (!textures[data])
             {
-               auto texture_path = Path::join(Path::basedir(path), data + ".png");
-               texture = make_shared<Texture>(texture_path);
+               std::string texture_path = Path::join(Path::basedir(path), data + ".png");
+               // TODO //
+               //textures[data] = make_shared<Texture>(texture_path);
             }
 
-            current_texture = texture;
+            current_texture = textures[data];
          }
       }
 
       if (vertices.size())
       {
-         auto mesh = make_shared<Mesh>();
-         mesh->set_vertices(move(vertices));
+         std::tr1::shared_ptr<Mesh> mesh(new Mesh());
+         mesh->set_vertices(vertices);
+         vertices.clear();
          mesh->set_texture(current_texture);
          meshes.push_back(mesh);
       }
