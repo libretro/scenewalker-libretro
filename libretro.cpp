@@ -23,7 +23,7 @@ static unsigned height = BASE_HEIGHT;
 static struct retro_hw_render_callback hw_render;
 static string mesh_path;
 
-static vector<std1::shared_ptr<Mesh> > meshes;
+static vector<shared_ptr<Mesh> > meshes;
 
 void retro_init(void)
 {}
@@ -244,7 +244,7 @@ static void init_mesh(const string& path)
       "  gl_FragColor = vec4(diffuse, colorDiffuse.a);\n"
       "}";
 
-   std1::shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
+   shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
    meshes = OBJ::load_from_file(path);
 
    mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 640.0f / 480.0f, 1.0f, 100.0f);
