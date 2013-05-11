@@ -15,15 +15,14 @@ endif
 ifeq ($(platform), unix)
    TARGET := libretro.so
    fpic := -fPIC
-   SHARED := -lz -shared -Wl,--version-script=link.T -Wl,--no-undefined
-   GL_LIB := -lGL
+   SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
+   GL_LIB := -lGL -lz
 else ifeq ($(platform), osx)
    TARGET := libretro.dylib
    fpic := -fPIC
-   SHARED := -lz -dynamiclib
-   GL_LIB := -framework OpenGL
+   SHARED := -dynamiclib
+   GL_LIB := -framework OpenGL -lz
 else
-   CC = gcc
    CXX = g++
    TARGET := retro.dll
    SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=link.T -Wl,--no-undefined
@@ -31,21 +30,16 @@ else
 endif
 
 ifeq ($(DEBUG), 1)
-   CFLAGS += -O0 -g
    CXXFLAGS += -O0 -g
 else
-   CFLAGS += -O3
    CXXFLAGS += -O3
 endif
 
 SOURCES := $(wildcard *.cpp)
-CSOURCES := $(wildcard *.c)
-OBJECTS := $(SOURCES:.cpp=.o) $(CSOURCES:.c=.o)
-CFLAGS += -std=gnu99 -Wall $(fpic)
+OBJECTS := $(SOURCES:.cpp=.o)
 CXXFLAGS += -Wall $(fpic)
 
 ifeq ($(GLES), 1)
-   CFLAGS += -DGLES
    CXXFLAGS += -DGLES
    LIBS += -lGLESv2
 else
@@ -59,9 +53,6 @@ $(TARGET): $(OBJECTS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)

@@ -1,11 +1,7 @@
-#ifndef _SHARED_H
-#define _SHARED_H
+#ifndef SHARED_HPP__
+#define SHARED_HPP__
 
-#ifndef __cplusplus
-#include <stdbool.h>
-#endif
-
-#ifdef _WIN32
+#ifdef _MSC_VER
 #include <memory>
 #define snprintf _snprintf
 #else
@@ -15,3 +11,4 @@
 void retro_stderr(const char *str);
 
 #endif
+
