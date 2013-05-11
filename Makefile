@@ -42,7 +42,7 @@ SOURCES := $(wildcard *.cpp)
 CSOURCES := $(wildcard *.c)
 OBJECTS := $(SOURCES:.cpp=.o) $(CSOURCES:.c=.o)
 CFLAGS += -std=gnu99 -Wall $(fpic)
-CXXFLAGS += -std=gnu++03 -Wall $(fpic)
+CXXFLAGS += -Wall $(fpic)
 
 ifeq ($(GLES), 1)
    CFLAGS += -DGLES
