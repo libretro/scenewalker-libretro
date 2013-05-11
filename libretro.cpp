@@ -82,7 +82,7 @@ void retro_set_environment(retro_environment_t cb)
 
    retro_variable variables[] = {
       { "modelviewer_resolution",
-         "Internal resolution; 320x240|640x480|960x720|1280x960|1600x1200|1920x1440" },
+         "Internal resolution; 320x240|360x480|480x272|512x384|512x512|640x240|640x448|640x480|720x576|800x600|960x720|1024x768|1280x720|1280x960|1600x1200|1920x1080|1920x1440|1920x1600" },
       { NULL, NULL },
    };
 
