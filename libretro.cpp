@@ -158,11 +158,15 @@ static void handle_input()
 
 static void update_variables()
 {
+   static char last_value[256];
    retro_variable var;
    var.key = "modelviewer_resolution";
    var.value = NULL;
 
    if (!environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) || !var.value)
+      return;
+
+   if (strcmp(last_value, var.value) == 0)
       return;
 
    std::vector<std::string> list = String::split(var.value, "x");
@@ -171,6 +175,8 @@ static void update_variables()
 
    width = String::stoi(list[0]);
    height = String::stoi(list[1]);
+
+   snprintf(last_value, sizeof(last_value), "%s", var.value);
 }
 
 void retro_run(void)
@@ -178,7 +184,7 @@ void retro_run(void)
    handle_input();
 
    bool updated = false;
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated))
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
       update_variables();
 
    SYM(glBindFramebuffer)(GL_FRAMEBUFFER, hw_render.get_current_framebuffer());
