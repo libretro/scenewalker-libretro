@@ -26,8 +26,8 @@ else
    CC = gcc
    CXX = g++
    TARGET := retro.dll
-   SHARED := -lz -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=link.T -Wl,--no-undefined
-   GL_LIB := -lopengl32
+   SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=link.T -Wl,--no-undefined
+   GL_LIB := -lopengl32 -lz
 endif
 
 ifeq ($(DEBUG), 1)
