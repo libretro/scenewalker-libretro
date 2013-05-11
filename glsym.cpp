@@ -19,6 +19,7 @@ namespace GL
 #define _D(sym) { #sym, reinterpret_cast<retro_proc_address_t>(sym) }
       static const mapper bind_map[] = {
          _D(glEnable),
+         _D(glDisable),
          _D(glBlendFunc),
          _D(glClearColor),
          _D(glTexImage2D),
@@ -30,6 +31,7 @@ namespace GL
          _D(glBindTexture),
          _D(glDrawArrays),
          _D(glGetError),
+         _D(glFrontFace),
       };
 #undef _D
 
