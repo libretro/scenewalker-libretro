@@ -72,7 +72,7 @@ void retro_stderr(const char *str)
 #ifdef _WIN32
    OutputDebugStringA(str);
 #else
-   fprintf(stderr, str);
+   fputs(str, stderr);
 #endif
 }
 
