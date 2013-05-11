@@ -141,7 +141,8 @@ namespace OBJ
             tex.push_back(parse_line<vec2>(data));
          else if (type == "f")
             parse_vertex(data, vertices, vertex, normal, tex);
-         else if (type == "texture") // Not standard OBJ, but do it like this for simplicity ...
+         else if (type == "texture" || // Not standard OBJ, but do it like this for simplicity ...
+               type == "usemtl") // will likely have to change when we start supporting materials better
          {
             if (vertices.size()) // Different texture, new mesh.
             {
