@@ -5,14 +5,21 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <cstdint>
 
 using namespace GL;
 using namespace glm;
+using namespace std;
+
+#define BASE_WIDTH 640
+#define BASE_HEIGHT 480
+#define MAX_WIDTH (BASE_WIDTH * 3)
+#define MAX_HEIGHT (BASE_HEIGHT * 3)
 
 static struct retro_hw_render_callback hw_render;
-static std::string mesh_path;
+static string mesh_path;
 
-static std::vector<std::shared_ptr<Mesh>> meshes;
+static vector<shared_ptr<Mesh>> meshes;
 
 void retro_init(void)
 {}
@@ -30,7 +37,7 @@ void retro_set_controller_port_device(unsigned, unsigned)
 
 void retro_get_system_info(struct retro_system_info *info)
 {
-   std::memset(info, 0, sizeof(*info));
+   memset(info, 0, sizeof(*info));
    info->library_name     = "ModelViewer";
    info->library_version  = "v1";
    info->need_fullpath    = true;
@@ -39,14 +46,14 @@ void retro_get_system_info(struct retro_system_info *info)
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
+   memset(info, 0, sizeof(*info));
    info->timing.fps = 60.0;
    info->timing.sample_rate = 30000.0;
 
-   info->geometry.base_width  = 640;
-   info->geometry.base_height = 480;
-   info->geometry.max_width   = 640;
-   info->geometry.max_height  = 480;
-   info->geometry.aspect_ratio = 4.0 / 3.0;
+   info->geometry.base_width  = BASE_WIDTH;
+   info->geometry.base_height = BASE_HEIGHT;
+   info->geometry.max_width   = MAX_WIDTH;
+   info->geometry.max_height  = MAX_HEIGHT;
 }
 
 static retro_video_refresh_t video_cb;
@@ -86,9 +93,51 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
    video_cb = cb;
 }
 
+static void handle_input()
+{
+   static float model_rotate_y;
+   static float model_rotate_x;
+   static float model_scale = 1.0f;
+
+   input_poll_cb();
+
+   int analog_x = input_state_cb(0, RETRO_DEVICE_ANALOG,
+         RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_X);
+
+   int analog_y = input_state_cb(0, RETRO_DEVICE_ANALOG,
+         RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_Y);
+
+   int analog_ry = input_state_cb(0, RETRO_DEVICE_ANALOG,
+         RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y);
+
+   if (abs(analog_x) < 10000)
+      analog_x = 0;
+   if (abs(analog_y) < 10000)
+      analog_y = 0;
+
+   if (abs(analog_ry) < 10000)
+      analog_ry = 0;
+
+   model_scale *= 1.0f - analog_ry * 0.000001f;
+   model_scale = clamp(model_scale, 0.1f, 100.0f);
+   model_rotate_x += analog_y * 0.0001f;
+   model_rotate_x = clamp(model_rotate_x, -80.0f, 80.0f);
+   model_rotate_y += analog_x * 0.00015f;
+
+   mat4 translation = translate(mat4(1.0), vec3(0, 0, -40));
+   mat4 scaler = scale(mat4(1.0), vec3(model_scale, model_scale, model_scale));
+   mat4 rotate_x = rotate(mat4(1.0), model_rotate_x, vec3(1, 0, 0));
+   mat4 rotate_y = rotate(mat4(1.0), model_rotate_y, vec3(0, 1, 0));
+
+   mat4 model = translation * scaler * rotate_x * rotate_y;
+
+   for (auto& mesh : meshes)
+      mesh->set_model(model);
+}
+
 void retro_run(void)
 {
-   input_poll_cb();
+   handle_input();
 
    SYM(glBindFramebuffer)(GL_FRAMEBUFFER, hw_render.get_current_framebuffer());
    SYM(glClearColor)(0.2f, 0.2f, 0.2f, 1.0f);
@@ -98,22 +147,22 @@ void retro_run(void)
    SYM(glEnable)(GL_CULL_FACE);
    SYM(glEnable)(GL_BLEND);
 
-   SYM(glViewport)(0, 0, 640, 480);
+   // Make this a core option later.
+   SYM(glViewport)(0, 0, MAX_WIDTH, MAX_HEIGHT);
 
    for (auto& mesh : meshes)
       mesh->render();
 
    SYM(glDisable)(GL_BLEND);
-
-   //auto error = SYM(glGetError)();
-   //std::cerr << "GL error: " << error << std::endl;
-
-   video_cb(RETRO_HW_FRAME_BUFFER_VALID, 640, 480, 0);
+   SYM(glDisable)(GL_DEPTH_TEST);
+   SYM(glDisable)(GL_CULL_FACE);
+   SYM(glBindFramebuffer)(GL_FRAMEBUFFER, 0);
+   video_cb(RETRO_HW_FRAME_BUFFER_VALID, MAX_WIDTH, MAX_HEIGHT, 0);
 }
 
-static void init_mesh(const std::string& path)
+static void init_mesh(const string& path)
 {
-   static const std::string vertex_shader =
+   static const string vertex_shader =
       "uniform mat4 uModel;\n"
       "uniform mat4 uMVP;\n"
       "attribute vec4 aVertex;\n"
@@ -129,7 +178,7 @@ static void init_mesh(const std::string& path)
       "  vNormal = uModel * vec4(aNormal, 0.0);\n"
       "}";
 
-   static const std::string fragment_shader =
+   static const string fragment_shader =
       "#ifdef GL_ES\n"
       "precision mediump float;\n"
       "#endif\n"
@@ -146,19 +195,14 @@ static void init_mesh(const std::string& path)
       "  gl_FragColor = vec4(diffuse * color.rgb, color.a);\n"
       "}";
 
-   auto shader = std::make_shared<Shader>(vertex_shader, fragment_shader);
+   auto shader = make_shared<Shader>(vertex_shader, fragment_shader);
 
    meshes = OBJ::load_from_file(path);
 
-   mat4 translation = translate(mat4(1.0), vec3(0, 0, -40));
-   mat4 scaler = scale(translation, vec3(15, 15, 15));
-   mat4 rotater = rotate(scaler, 0.0f, vec3(0, 1, 0));
-   mat4 projection = scale(perspective(45.0f, 640.0f / 480.0f, 1.0f, 100.0f),
-         vec3(1, -1, 1));
+   mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 640.0f / 480.0f, 1.0f, 100.0f);
 
    for (auto& mesh : meshes)
    {
-      mesh->set_model(rotater);
       mesh->set_projection(projection);
       mesh->set_shader(shader);
    }
@@ -181,7 +225,7 @@ bool retro_load_game(const struct retro_game_info *info)
    enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
    if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
    {
-      std::cerr << "XRGB8888 is not supported." << std::endl;
+      cerr << "XRGB8888 is not supported." << endl;
       return false;
    }
 
