@@ -18,6 +18,11 @@ This implementation does not support MTL materials. Instead, a simple `texture` 
 sets the current texture to `Foo.png` relative to where the obj was loaded from.
 All faces declared after will refer to this texture.
 
+## Changing resolution
+
+The implementation exposes a libretro core option to change internal resolution.
+Resolutions can be set to a scale factor of 320x240 (up to 1920x1440).
+
 ## Example OBJ
 
 This declares a simple textured triangle:
