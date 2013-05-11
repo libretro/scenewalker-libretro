@@ -1,17 +1,23 @@
 #include "mesh.hpp"
 
 using namespace glm;
+using namespace std;
+using namespace std1;
 
 namespace GL
 {
    Mesh::Mesh() : 
       vertex_type(GL_TRIANGLES),
-      model(glm::mat4(1.0)),
-      view(glm::mat4(1.0)),
-      projection(glm::mat4(1.0))
+      light_dir(normalize(vec3(-1, -1, -1))),
+      light_ambient(0.25f, 0.25f, 0.25f),
+      model(mat4(1.0)),
+      view(mat4(1.0)),
+      projection(mat4(1.0))
    {
       SYM(glGenBuffers)(1, &vbo);
       mvp = projection * view * model;
+      material.ambient = vec3(1, 1, 1);
+      material.diffuse = vec3(1, 1, 1);
    }
 
    Mesh::~Mesh()
@@ -22,9 +28,9 @@ namespace GL
       SYM(glDeleteBuffers)(1, &vbo);
    }
 
-   void Mesh::set_vertices(std::vector<Vertex> vertex)
+   void Mesh::set_vertices(vector<Vertex> vertex)
    {
-      set_vertices(std::tr1::shared_ptr<std::vector<Vertex> >(new std::vector<Vertex>(vertex)));
+      set_vertices(shared_ptr<vector<Vertex> >(new vector<Vertex>(vertex)));
    }
 
    void Mesh::set_vertex_type(GLenum type)
@@ -32,7 +38,7 @@ namespace GL
       vertex_type = type;
    }
 
-   void Mesh::set_vertices(const std::tr1::shared_ptr<std::vector<Vertex> >& vertex)
+   void Mesh::set_vertices(const shared_ptr<vector<Vertex> >& vertex)
    {
       this->vertex = vertex;
 
@@ -42,29 +48,29 @@ namespace GL
       SYM(glBindBuffer)(GL_ARRAY_BUFFER, 0);
    }
 
-   void Mesh::set_texture(const std::tr1::shared_ptr<Texture>& texture)
+   void Mesh::set_material(const Material& material)
    {
-      this->texture = texture;
+      this->material = material;
    }
 
-   void Mesh::set_shader(const std::tr1::shared_ptr<Shader>& shader)
+   void Mesh::set_shader(const shared_ptr<Shader>& shader)
    {
       this->shader = shader;
    }
 
-   void Mesh::set_model(const glm::mat4& model)
+   void Mesh::set_model(const mat4& model)
    {
       this->model = model;
       mvp = projection * view * model;
    }
 
-   void Mesh::set_view(const glm::mat4& view)
+   void Mesh::set_view(const mat4& view)
    {
       this->view = view;
       mvp = projection * view * model;
    }
 
-   void Mesh::set_projection(const glm::mat4& projection)
+   void Mesh::set_projection(const mat4& projection)
    {
       this->projection = projection;
       mvp = projection * view * model;
@@ -75,17 +81,28 @@ namespace GL
       if (!vertex || !shader)
          return;
 
-      if (texture)
-         texture->bind();
+      if (material.diffuse_map)
+         material.diffuse_map->bind();
 
       shader->use();
 
-      SYM(glUniform1i)(shader->uniform("sTexture"), 0);
+      SYM(glUniform1i)(shader->uniform("sDiffuse"), 0);
 
       SYM(glUniformMatrix4fv)(shader->uniform("uModel"),
             1, GL_FALSE, value_ptr(model));
       SYM(glUniformMatrix4fv)(shader->uniform("uMVP"),
             1, GL_FALSE, value_ptr(mvp));
+
+      SYM(glUniform3fv)(shader->uniform("uMTLAmbient"),
+            1, value_ptr(material.ambient));
+      SYM(glUniform3fv)(shader->uniform("uMTLDiffuse"),
+            1, value_ptr(material.diffuse));
+
+      SYM(glUniform3fv)(shader->uniform("uLightDir"),
+            1, value_ptr(light_dir));
+
+      SYM(glUniform3fv)(shader->uniform("uLightAmbient"),
+            1, value_ptr(light_ambient));
 
       GLint aVertex = shader->attrib("aVertex");
       GLint aNormal = shader->attrib("aNormal");

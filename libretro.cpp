@@ -11,19 +11,19 @@
 using namespace GL;
 using namespace glm;
 using namespace std;
-using namespace std::tr1;
+using namespace std1;
 
 #define BASE_WIDTH 320
 #define BASE_HEIGHT 240
-#define MAX_WIDTH (BASE_WIDTH * 6)
-#define MAX_HEIGHT (BASE_HEIGHT * 6)
+#define MAX_WIDTH 1920
+#define MAX_HEIGHT 1600
 static unsigned width = BASE_WIDTH;
 static unsigned height = BASE_HEIGHT;
 
 static struct retro_hw_render_callback hw_render;
 static string mesh_path;
 
-static vector<std::tr1::shared_ptr<Mesh> > meshes;
+static vector<shared_ptr<Mesh> > meshes;
 
 void retro_init(void)
 {}
@@ -165,7 +165,7 @@ static void update_variables()
    if (!environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) || !var.value)
       return;
 
-   std::vector<std::string> list = String::split(var.value, "x");
+   vector<string> list = String::split(var.value, "x");
    if (list.size() != 2)
       return;
 
@@ -226,17 +226,26 @@ static void init_mesh(const string& path)
       "varying vec2 vTex;\n"
       "varying vec4 vNormal;\n"
       "varying vec4 vPos;\n"
-      "uniform sampler2D sTexture;\n"
+
+      "uniform sampler2D sDiffuse;\n"
+
+      "uniform vec3 uLightDir;\n"
+      "uniform float uLightAmbient;\n"
+      "uniform vec3 uMTLAmbient;\n"
+      "uniform vec3 uMTLDiffuse;\n"
+
       "void main() {\n"
-      "  vec4 color = texture2D(sTexture, vTex);\n"
       "  vec3 normal = normalize(vNormal.xyz);\n"
-      "  vec3 dist = vPos.xyz - vec3(20.0, 40.0, -30.0);\n"
-      "  float directivity = dot(normalize(dist), -normal);\n"
-      "  float diffuse = clamp(directivity, 0.0, 1.0) + 0.4;\n"
-      "  gl_FragColor = vec4(diffuse * color.rgb, color.a);\n"
+      "  float directivity = dot(uLightDir, -normal);\n"
+
+      "  vec4 colorDiffuse = texture2D(sDiffuse, vTex);\n"
+      "  vec3 diffuse = clamp(colorDiffuse.rgb * directivity, vec3(0.0), vec3(1.0));\n"
+      "  vec3 ambient = uLightAmbient * uMTLAmbient;\n"
+
+      "  gl_FragColor = vec4(diffuse + ambient, colorDiffuse.a);\n"
       "}";
 
-   std::tr1::shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
+   shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
    meshes = OBJ::load_from_file(path);
 
    mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 640.0f / 480.0f, 1.0f, 100.0f);

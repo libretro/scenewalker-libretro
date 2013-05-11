@@ -7,7 +7,7 @@
 using namespace GL;
 using namespace glm;
 using namespace std;
-using namespace std::tr1;
+using namespace std1;
 
 namespace OBJ
 {
@@ -18,7 +18,7 @@ namespace OBJ
    inline vec2 parse_line(const string& data)
    {
       float x = 0, y = 0;
-      std::vector<std::string> split = String::split(data, " ");
+      vector<string> split = String::split(data, " ");
       if (split.size() >= 2)
       {
          x = String::stof(split[0]);
@@ -32,7 +32,7 @@ namespace OBJ
    inline vec3 parse_line(const string& data)
    {
       float x = 0, y = 0, z = 0;
-      std::vector<std::string> split = String::split(data, " ");
+      vector<string> split = String::split(data, " ");
       if (split.size() >= 3)
       {
          x = String::stof(split[0]);
@@ -53,7 +53,7 @@ namespace OBJ
          const vector<vec3>& normal,
          const vector<vec2>& tex)
    {
-      std::vector<std::string> vertices = String::split(data, " ");
+      vector<string> vertices = String::split(data, " ");
       if (vertices.size() > 3)
          vertices.resize(3);
 
@@ -62,7 +62,7 @@ namespace OBJ
       {
          Vertex out_vertex;
 
-         std::vector<std::string> coords = String::split(vertices[i], "/", true);
+         vector<string> coords = String::split(vertices[i], "/", true);
          if (coords.size() == 1) // Vertex only
          {
             size_t coord = translate_index(String::stoi(coords[0]), vertex.size());
@@ -130,8 +130,8 @@ namespace OBJ
          line = line.substr(0, line.find_first_of('\r'));
 
          size_t split_point = line.find_first_of(' ');
-         std::string type = line.substr(0, split_point);
-         std::string data = split_point != string::npos ? line.substr(split_point + 1) : string();
+         string type = line.substr(0, split_point);
+         string data = split_point != string::npos ? line.substr(split_point + 1) : string();
 
          if (type == "v")
             vertex.push_back(parse_line<vec3>(data));
@@ -146,16 +146,20 @@ namespace OBJ
          {
             if (vertices.size()) // Different texture, new mesh.
             {
-               std::tr1::shared_ptr<Mesh> mesh(new Mesh());
+               shared_ptr<Mesh> mesh(new Mesh());
                mesh->set_vertices(vertices);
                vertices.clear();
-               mesh->set_texture(current_texture);
+
+               Material mat;
+               mat.diffuse_map = current_texture;
+               mesh->set_material(mat);
+
                meshes.push_back(mesh);
             }
 
             if (!textures[data])
             {
-               std::string texture_path = Path::join(Path::basedir(path), data + ".png");
+               string texture_path = Path::join(Path::basedir(path), data + ".png");
                textures[data] = shared_ptr<Texture>(new Texture(texture_path));
             }
 
@@ -165,10 +169,15 @@ namespace OBJ
 
       if (vertices.size())
       {
-         std::tr1::shared_ptr<Mesh> mesh(new Mesh());
+         shared_ptr<Mesh> mesh(new Mesh());
          mesh->set_vertices(vertices);
          vertices.clear();
-         mesh->set_texture(current_texture);
+
+         Material mat;
+         mat.diffuse_map = current_texture;
+
+         mesh->set_material(mat);
+
          meshes.push_back(mesh);
       }
 
