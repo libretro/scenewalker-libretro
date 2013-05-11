@@ -13,6 +13,28 @@ namespace GL
    void init_symbol_map()
    {
       map.clear();
+
+      // On Windows, you cannot lookup these symbols ... <_<
+      struct mapper { const char* sym; retro_proc_address_t proc; };
+#define _D(sym) { #sym, reinterpret_cast<retro_proc_address_t>(sym) }
+      static const mapper bind_map[] = {
+         _D(glEnable),
+         _D(glBlendFunc),
+         _D(glClearColor),
+         _D(glTexImage2D),
+         _D(glViewport),
+         _D(glClear),
+         _D(glTexParameteri),
+         _D(glDeleteTextures),
+         _D(glGenTextures),
+         _D(glBindTexture),
+         _D(glDrawArrays),
+         _D(glGetError),
+      };
+#undef _D
+
+      for (auto& bind : bind_map)
+         map[bind.sym] = bind.proc;
    }
 
    static retro_hw_get_proc_address_t proc;
