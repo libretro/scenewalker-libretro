@@ -33,7 +33,7 @@ else ifeq ($(platform), qnx)
 	INCFLAGS = -Iinclude/qnx
 	CXXFLAGS += $(INCFLAGS)
 	CFLAGS += $(INCFLAGS)
-	INCLUDE_MINIZ = 1
+	LIBS := -lz
 else
    CXX = g++
    TARGET := retro.dll
