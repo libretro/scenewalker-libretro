@@ -42,7 +42,7 @@ namespace GL
 
       SYM(glBindBuffer)(GL_ARRAY_BUFFER, vbo);
       SYM(glBufferData)(GL_ARRAY_BUFFER, vertex->size() * sizeof(Vertex),
-            vertex->data(), GL_STATIC_DRAW);
+            &(*vertex)[0], GL_STATIC_DRAW);
       SYM(glBindBuffer)(GL_ARRAY_BUFFER, 0);
    }
 

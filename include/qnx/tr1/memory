@@ -66,6 +66,7 @@ class shared_ptr {
       bool operator<(const shared_ptr<T>& o) const { return ptr < o.ptr; }    
 
       unsigned refcount() const { return *count; }
+      operator bool() { return ptr; }
 };
 template <class T>
 

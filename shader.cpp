@@ -27,10 +27,10 @@ namespace GL
          {
             std::vector<char> buf(len + 1);
             GLsizei out_len;
-            SYM(glGetProgramInfoLog)(prog, len, &out_len, buf.data());
+            SYM(glGetProgramInfoLog)(prog, len, &out_len, &buf[0]);
 
             char err_str[256];
-            snprintf(err_str, sizeof(err_str), "Link error: %s", buf.data());
+            snprintf(err_str, sizeof(err_str), "Link error: %s", &buf[0]);
             retro_stderr(err_str);
          }
       }
@@ -55,10 +55,10 @@ namespace GL
          {
             std::vector<char> buf(len + 1);
             GLsizei out_len;
-            SYM(glGetShaderInfoLog)(shader, len, &out_len, buf.data());
+            SYM(glGetShaderInfoLog)(shader, len, &out_len, &buf[0]);
 
             char err_str[256];
-            snprintf(err_str, sizeof(err_str), "Shader error: %s", buf.data());
+            snprintf(err_str, sizeof(err_str), "Shader error: %s", &buf[0]);
             retro_stderr(err_str);
          }
 

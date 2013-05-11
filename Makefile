@@ -25,12 +25,15 @@ else ifeq ($(platform), osx)
 else ifeq ($(platform), qnx)
    TARGET := $(TARGET_NAME)_libretro_qnx.so
    fpic := -fPIC
-   SHARED := -lcpp -lm -shared -Wl,-version-script=$(LIBRETRO_DIR)/link.T -Wl,-no-undefined
+   SHARED := -lcpp -lm -shared -Wl,-version-script=link.T -Wl,-no-undefined
 	CC = qcc -Vgcc_ntoarmv7le
 	CXX = QCC -Vgcc_ntoarmv7le_cpp
 	AR = QCC -Vgcc_ntoarmv7le
 	GLES = 1
-	CXXFLAGS = -Iinclude/qnx
+	INCFLAGS = -Iinclude/qnx
+	CXXFLAGS += $(INCFLAGS)
+	CFLAGS += $(INCFLAGS)
+	INCLUDE_MINIZ = 1
 else
    CXX = g++
    TARGET := retro.dll
@@ -40,16 +43,24 @@ endif
 
 ifeq ($(DEBUG), 1)
    CXXFLAGS += -O0 -g
+   CFLAGS += -O0 -g
 else
    CXXFLAGS += -O3
+   CFLAGS += -O3
 endif
 
-SOURCES := $(wildcard *.cpp)
-OBJECTS := $(SOURCES:.cpp=.o)
+ifeq ($(INCLUDE_MINIZ), 1)
+MINIZ_OBJ := msvc/deps/miniz/miniz.c
+endif
+
+SOURCES := $(wildcard *.cpp) $(wildcard *.c)
+OBJECTS := $(SOURCES:.cpp=.o) $(MINIZ_OBJ:.c=.o)
 CXXFLAGS += -Wall $(fpic)
+CFLAGS += -Wall $(fpic)
 
 ifeq ($(GLES), 1)
    CXXFLAGS += -DGLES
+   CFLAGS += -DGLES
    LIBS += -lGLESv2
 else
    LIBS += $(GL_LIB)
@@ -62,6 +73,9 @@ $(TARGET): $(OBJECTS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
