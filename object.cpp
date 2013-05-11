@@ -1,6 +1,5 @@
 #include "object.hpp"
 #include "util.hpp"
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <map>
