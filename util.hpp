@@ -47,27 +47,16 @@ namespace String
       return list;
    }
 
-   // GCC 4.6 doesn't have std::stoi/std::stof ...
-#define GCC_VERSION (__GNUC__ * 10000 + __GNUC__MINOR__ * 100)
    inline int stoi(const std::string& str)
    {
-#if defined(__GNUC__) && (GCC_VERSION < 40700)
       return std::strtol(str.c_str(), NULL, 0);
-#else
-      return std::stoi(str);
-#endif
    }
 
    inline float stof(const std::string& str)
    {
-#if defined(__GNUC__) && (GCC_VERSION < 40700)
-      return std::strtod(str.c_str(), NULL);
-#else
-      return std::stof(str);
-#endif
+      return static_cast<float>(std::strtod(str.c_str(), NULL));
    }
 }
-
 
 #endif
 
