@@ -5,7 +5,6 @@
 #include "util.hpp"
 #include <cstring>
 #include <string>
-#include <iostream>
 #include <stdint.h>
 #include "shared.hpp"
 
@@ -73,7 +72,7 @@ void retro_stderr(const char *str)
 #ifdef _WIN32
    OutputDebugStringA(str);
 #else
-   std::cerr << var << endl;
+   fprintf(stderr, str);
 #endif
 }
 

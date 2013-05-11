@@ -16,6 +16,7 @@
 
 #include <map>
 #include <iostream>
+#include <stdio.h>
 #include "libretro.h"
 #include "shared.hpp"
 
