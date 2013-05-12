@@ -121,7 +121,7 @@ namespace OBJ
 
       for (string line; getline(file, line); )
       {
-         line = line.substr(0, line.find_first_of('\r'));
+         line = String::strip(line);
 
          size_t split_point = line.find_first_of(' ');
          string type = line.substr(0, split_point);
@@ -141,8 +141,12 @@ namespace OBJ
             current.diffuse = parse_line<vec3>(data);
          else if (type == "Ks")
             current.specular = parse_line<vec3>(data);
-         else if (type == "Tr" || type == "d")
+         else if (type == "Ns")
+            current.specular_power = String::stof(data);
+         else if (type == "d")
             current.alpha_mod = String::stof(data);
+         else if (type == "Tr")
+            current.alpha_mod = 1.0f - String::stof(data);
          else if (type == "map_Kd")
          {
             string diffuse_path = Path::join(Path::basedir(path), data);
@@ -176,7 +180,7 @@ namespace OBJ
 
       for (string line; getline(file, line); )
       {
-         line = line.substr(0, line.find_first_of('\r'));
+         line = String::strip(line);
 
          size_t split_point = line.find_first_of(' ');
          string type = line.substr(0, split_point);
@@ -226,7 +230,7 @@ namespace OBJ
             current_material = materials[data];
          }
          else if (type == "mtllib")
-            materials = parse_mtllib(Path::join(Path::basedir(path), data + ".mtl"));
+            materials = parse_mtllib(Path::join(Path::basedir(path), data));
       }
 
       if (vertices.size())

@@ -85,6 +85,7 @@ namespace GL
       shader->use();
 
       SYM(glUniform1i)(shader->uniform("sDiffuse"), 0);
+      SYM(glUniform1i)(shader->uniform("sAmbient"), 0);
 
       SYM(glUniformMatrix4fv)(shader->uniform("uModel"),
             1, GL_FALSE, value_ptr(model));
@@ -97,6 +98,8 @@ namespace GL
             1, value_ptr(material.diffuse));
       SYM(glUniform3fv)(shader->uniform("uMTLSpecular"),
             1, value_ptr(material.specular));
+      SYM(glUniform1f)(shader->uniform("uMTLSpecularPower"),
+            material.specular_power);
       SYM(glUniform1f)(shader->uniform("uMTLAlphaMod"),
             material.alpha_mod);
 

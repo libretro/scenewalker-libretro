@@ -228,22 +228,37 @@ static void init_mesh(const string& path)
       "varying vec4 vPos;\n"
 
       "uniform sampler2D sDiffuse;\n"
+      "uniform sampler2D sAmbient;\n"
 
       "uniform vec3 uLightDir;\n"
       "uniform vec3 uLightAmbient;\n"
       "uniform vec3 uMTLAmbient;\n"
       "uniform float uMTLAlphaMod;\n"
       "uniform vec3 uMTLDiffuse;\n"
+      "uniform vec3 uMTLSpecular;\n"
+      "uniform float uMTLSpecularPower;\n"
 
       "void main() {\n"
-      "  vec4 colorDiffuse = texture2D(sDiffuse, vTex);\n"
-      "  if (colorDiffuse.a < 0.5) discard;\n"
+      "  vec4 colorDiffuseFull = texture2D(sDiffuse, vTex);\n"
+      "  vec4 colorAmbientFull = texture2D(sAmbient, vTex);\n"
+
+      "  if (colorDiffuseFull.a < 0.5)\n"
+      "    discard;\n"
+
+      "  vec3 colorDiffuse = mix(uMTLDiffuse, colorDiffuseFull.rgb, vec3(colorDiffuseFull.a));\n"
+      "  vec3 colorAmbient = mix(uMTLAmbient, colorAmbientFull.rgb, vec3(colorAmbientFull.a));\n"
+
       "  vec3 normal = normalize(vNormal.xyz);\n"
       "  float directivity = dot(uLightDir, -normal);\n"
 
-      "  vec3 diffuse = colorDiffuse.rgb * (clamp(directivity, 0.0, 1.0) + uLightAmbient * uMTLAmbient);\n"
+      "  vec3 diffuse = colorDiffuse * clamp(directivity, 0.0, 1.0);\n"
+      "  vec3 ambient = colorAmbient * uLightAmbient;\n"
 
-      "  gl_FragColor = vec4(diffuse, uMTLAlphaMod * colorDiffuse.a);\n"
+      "  vec3 modelToFace = normalize(-vPos.xyz);\n"
+      "  float specularity = pow(clamp(dot(modelToFace, reflect(uLightDir, normal)), 0.0, 1.0), uMTLSpecularPower);\n"
+      "  vec3 specular = uMTLSpecular * specularity;\n"
+
+      "  gl_FragColor = vec4(diffuse + ambient + specular, uMTLAlphaMod * colorDiffuseFull.a);\n"
       "}";
 
    shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));

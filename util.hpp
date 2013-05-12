@@ -56,6 +56,16 @@ namespace String
    {
       return static_cast<float>(std::strtod(str.c_str(), NULL));
    }
+
+   inline std::string strip(const std::string& str)
+   {
+      size_t first_non_space = str.find_first_not_of(" \t\r");
+      if (first_non_space == std::string::npos)
+         return "";
+
+      return str.substr(first_non_space,
+            str.find_last_not_of(" \t\r") - first_non_space + 1);
+   }
 }
 
 #endif

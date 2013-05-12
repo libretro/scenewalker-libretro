@@ -30,7 +30,7 @@ namespace GL
             SYM(glGetProgramInfoLog)(prog, len, &out_len, &buf[0]);
 
             char err_str[256];
-            snprintf(err_str, sizeof(err_str), "Link error: %s", &buf[0]);
+            snprintf(err_str, sizeof(err_str), "Link error: %s\n", &buf[0]);
             retro_stderr(err_str);
          }
       }
@@ -58,7 +58,7 @@ namespace GL
             SYM(glGetShaderInfoLog)(shader, len, &out_len, &buf[0]);
 
             char err_str[256];
-            snprintf(err_str, sizeof(err_str), "Shader error: %s", &buf[0]);
+            snprintf(err_str, sizeof(err_str), "Shader error: %s\n", &buf[0]);
             retro_stderr(err_str);
          }
 

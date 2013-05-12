@@ -27,12 +27,14 @@ namespace GL
          ambient(1, 1, 1),
          diffuse(1, 1, 1),
          specular(0, 0, 0),
+         specular_power(60.0),
          alpha_mod(1.0f)
       {}
 
       glm::vec3 ambient;
       glm::vec3 diffuse;
       glm::vec3 specular;
+      float specular_power;
       float alpha_mod;
       std1::shared_ptr<Texture> diffuse_map;
    };
