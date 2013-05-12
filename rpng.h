@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-bool rpng_load_image_argb(const char *path, uint32_t **data, unsigned *width, unsigned *height);
+bool rpng_load_image_rgba(const char *path, uint8_t **data, unsigned *width, unsigned *height);
 
 #ifdef __cplusplus
 }

@@ -11,7 +11,7 @@ namespace GL
    Texture::Texture() : tex(0)
    {}
 
-   void Texture::upload_data(const uint32_t* data, unsigned width, unsigned height,
+   void Texture::upload_data(const void* data, unsigned width, unsigned height,
          bool generate_mipmap)
    {
       if (!tex)
@@ -19,20 +19,10 @@ namespace GL
 
       bind();
 
-#ifdef GLES
-#if defined(GL_BGRA) && !defined(GL_BGRA_EXT)
-#define GL_BGRA_EXT GL_BGRA
-#endif
-      SYM(glTexImage2D)(GL_TEXTURE_2D,
-            0, GL_BGRA_EXT, width, height, 0,
-            GL_BGRA_EXT, GL_UNSIGNED_BYTE,
-            data);
-#else
       SYM(glTexImage2D)(GL_TEXTURE_2D,
             0, GL_RGBA, width, height, 0,
-            GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+            GL_RGBA, GL_UNSIGNED_BYTE,
             data);
-#endif
 
       if (generate_mipmap)
       {
@@ -55,10 +45,10 @@ namespace GL
 
    Texture::Texture(const std::string& path) : tex(0)
    {
-      uint32_t* data = NULL;
+      uint8_t* data = NULL;
       unsigned width = 0, height = 0;
 
-      bool ret = rpng_load_image_argb(path.c_str(),
+      bool ret = rpng_load_image_rgba(path.c_str(),
             &data, &width, &height);
 
       if (ret)

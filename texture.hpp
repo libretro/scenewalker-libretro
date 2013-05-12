@@ -16,7 +16,7 @@ namespace GL
          static void unbind(unsigned unit = 0);
 
          static std1::shared_ptr<Texture> blank();
-         void upload_data(const uint32_t* data, unsigned width, unsigned height,
+         void upload_data(const void* data, unsigned width, unsigned height,
                bool generate_mipmap);
 
       private:

@@ -260,7 +260,7 @@ static void init_mesh(const string& path)
       "varying vec4 vPos;\n"
       "void main() {\n"
       "  gl_Position = uMVP * aVertex;\n"
-      "  vTex = vec2(aTex.x, 1.0 - aTex.y);\n"
+      "  vTex = aTex;\n"
       "  vPos = uModel * aVertex;\n"
       "  vNormal = uModel * vec4(aNormal, 0.0);\n"
       "}";

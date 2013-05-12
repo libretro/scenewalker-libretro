@@ -191,30 +191,23 @@ static inline int paeth(int a, int b, int c)
       return c;
 }
 
-static inline void copy_line_rgb(uint32_t *data, const uint8_t *decoded, unsigned width)
+static inline void copy_line_rgb(uint8_t *data, const uint8_t *decoded, unsigned width)
 {
    for (unsigned i = 0; i < width; i++)
    {
-      uint32_t r = *decoded++;
-      uint32_t g = *decoded++;
-      uint32_t b = *decoded++;
-      data[i] = (0xffu << 24) | (r << 16) | (g << 8) | (b << 0);
+      *data++ = *decoded++;
+      *data++ = *decoded++;
+      *data++ = *decoded++;
+      *data++ = 0xff;
    }
 }
 
-static inline void copy_line_rgba(uint32_t *data, const uint8_t *decoded, unsigned width)
+static inline void copy_line_rgba(uint8_t *data, const uint8_t *decoded, unsigned width)
 {
-   for (unsigned i = 0; i < width; i++)
-   {
-      uint32_t r = *decoded++;
-      uint32_t g = *decoded++;
-      uint32_t b = *decoded++;
-      uint32_t a = *decoded++;
-      data[i] = (a << 24) | (r << 16) | (g << 8) | (b << 0);
-   }
+   memcpy(data, decoded, width * sizeof(uint32_t));
 }
 
-static bool png_reverse_filter(uint32_t *data, const struct png_ihdr *ihdr,
+static bool png_reverse_filter(uint8_t *data, const struct png_ihdr *ihdr,
       const uint8_t *inflate_buf, size_t inflate_buf_size)
 {
    bool ret = true;
@@ -229,8 +222,11 @@ static bool png_reverse_filter(uint32_t *data, const struct png_ihdr *ihdr,
    if (!decoded_scanline || !decoded_scanline)
       GOTO_END_ERROR();
 
+   // Top-left origin to bottom-left origin for OpenGL.
+   data += (ihdr->height - 1) * ihdr->width * sizeof(uint32_t);
+
    for (unsigned h = 0; h < ihdr->height;
-         h++, inflate_buf += pitch, data += ihdr->width)
+         h++, inflate_buf += pitch, data -= ihdr->width * sizeof(uint32_t))
    {
       unsigned filter = *inflate_buf++;
       switch (filter)
@@ -304,7 +300,7 @@ static bool png_append_idat(FILE *file, const struct png_chunk *chunk, struct id
    return true;
 }
 
-bool rpng_load_image_argb(const char *path, uint32_t **data, unsigned *width, unsigned *height)
+bool rpng_load_image_rgba(const char *path, uint8_t **data, unsigned *width, unsigned *height)
 {
    *data   = NULL;
    *width  = 0;
@@ -411,7 +407,7 @@ bool rpng_load_image_argb(const char *path, uint32_t **data, unsigned *width, un
 
    *width  = ihdr.width;
    *height = ihdr.height;
-   *data = (uint32_t*)malloc(ihdr.width * ihdr.height * sizeof(uint32_t));
+   *data = (uint8_t*)malloc(ihdr.width * ihdr.height * sizeof(uint32_t));
    if (!*data)
       GOTO_END_ERROR();
 

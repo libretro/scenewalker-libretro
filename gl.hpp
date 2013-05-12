@@ -9,10 +9,8 @@
 #if defined(GLES)
 #ifdef IOS
 #include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
 #else
 #include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 #endif
 #elif defined(__APPLE__)
 #include <OpenGL/gl.h>
