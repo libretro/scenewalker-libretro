@@ -24,7 +24,11 @@
 #define decltype(type) typeof(type)
 #endif
 
+#ifdef GLES
+#define SYM(sym) sym
+#else
 #define SYM(sym) (::GL::symbol<decltype(&sym)>(#sym))
+#endif
 
 namespace GL
 {
@@ -53,11 +57,7 @@ namespace GL
       {
          func = get_symbol(sym);
          if (!func)
-         {
-            char err_str[256];
-            snprintf(err_str, sizeof(err_str), "Didnt' find GL symbol: %s", sym.c_str());
-            retro_stderr(err_str);
-         }
+            retro_stderr_print("Didn't find GL symbol: %s\n", sym.c_str());
       }
 
       return reinterpret_cast<Func>(func);

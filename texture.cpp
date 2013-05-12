@@ -43,11 +43,7 @@ namespace GL
          free(data);
       }
       else
-      {
-         char err_str[256];
-         snprintf(err_str, sizeof(err_str), "Failed to load image: %s\n", path.c_str());
-         retro_stderr(err_str);
-      }
+         retro_stderr_print("Failed to load image: %s\n", path.c_str());
    }
 
    Texture::~Texture()

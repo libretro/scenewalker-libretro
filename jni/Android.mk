@@ -18,8 +18,8 @@ LOCAL_CFLAGS += -DANDROID_MIPS
 endif
 
 LOCAL_SRC_FILES += $(wildcard ../*.cpp) $(wildcard ../*.c)
-LOCAL_CXXFLAGS += -O2 -Wall -ffast-math -fexceptions -DGLES
-LOCAL_LDLIBS += -lz -lGLESv2
+LOCAL_CXXFLAGS += -O2 -Wall -ffast-math -fexceptions -DGLES -DANDROID
+LOCAL_LDLIBS += -lz -llog -lGLESv2
 
 include $(BUILD_SHARED_LIBRARY)
 

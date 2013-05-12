@@ -15,6 +15,7 @@ namespace std1 = std::tr1;
 #endif
 
 void retro_stderr(const char *str);
+void retro_stderr_print(const char *fmt, ...);
 
 #endif
 

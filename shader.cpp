@@ -29,9 +29,7 @@ namespace GL
             GLsizei out_len;
             SYM(glGetProgramInfoLog)(prog, len, &out_len, &buf[0]);
 
-            char err_str[256];
-            snprintf(err_str, sizeof(err_str), "Link error: %s\n", &buf[0]);
-            retro_stderr(err_str);
+            retro_stderr_print("Link error: %s\n", &buf[0]);
          }
       }
    }
@@ -57,9 +55,7 @@ namespace GL
             GLsizei out_len;
             SYM(glGetShaderInfoLog)(shader, len, &out_len, &buf[0]);
 
-            char err_str[256];
-            snprintf(err_str, sizeof(err_str), "Shader error: %s\n", &buf[0]);
-            retro_stderr(err_str);
+            retro_stderr_print("Shader error: %s\n", &buf[0]);
          }
 
          SYM(glDeleteShader)(shader);

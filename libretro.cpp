@@ -15,8 +15,13 @@ using namespace std1;
 
 #define BASE_WIDTH 320
 #define BASE_HEIGHT 240
+#ifdef GLES
+#define MAX_WIDTH 512
+#define MAX_HEIGHT 512
+#else
 #define MAX_WIDTH 1920
 #define MAX_HEIGHT 1600
+#endif
 static unsigned width = BASE_WIDTH;
 static unsigned height = BASE_HEIGHT;
 
@@ -67,13 +72,31 @@ static retro_environment_t environ_cb;
 static retro_input_poll_t input_poll_cb;
 static retro_input_state_t input_state_cb;
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
+#include <stdarg.h>
+
 void retro_stderr(const char *str)
 {
-#ifdef _WIN32
+#if defined(_WIN32)
    OutputDebugStringA(str);
+#elif defined(ANDROID)
+   __android_log_print(ANDROID_LOG_INFO, "ModelViewer: ", "%s", str);
 #else
    fputs(str, stderr);
 #endif
+}
+
+void retro_stderr_print(const char *fmt, ...)
+{
+   char buf[1024];
+   va_list list;
+   va_start(list, fmt);
+   vsprintf(buf, fmt, list); // Unsafe, but vsnprintf isn't in C++03 :(
+   va_end(list);
+   retro_stderr(buf);
 }
 
 void retro_set_environment(retro_environment_t cb)
@@ -82,7 +105,11 @@ void retro_set_environment(retro_environment_t cb)
 
    retro_variable variables[] = {
       { "modelviewer_resolution",
+#ifdef GLES
+         "Internal resolution; 320x240|360x480|480x272|512x384|512x512" },
+#else
          "Internal resolution; 320x240|360x480|480x272|512x384|512x512|640x240|640x448|640x480|720x576|800x600|960x720|1024x768|1280x720|1280x960|1600x1200|1920x1080|1920x1440|1920x1600" },
+#endif
       { NULL, NULL },
    };
 
@@ -171,6 +198,7 @@ static void update_variables()
 
    width = String::stoi(list[0]);
    height = String::stoi(list[1]);
+   retro_stderr_print("Internal resolution: %u x %u\n", width, height);
 }
 
 void retro_run(void)
@@ -181,15 +209,16 @@ void retro_run(void)
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
       update_variables();
 
-   SYM(glBindFramebuffer)(GL_FRAMEBUFFER, hw_render.get_current_framebuffer());
+   GLuint fb = hw_render.get_current_framebuffer();
+   SYM(glBindFramebuffer)(GL_FRAMEBUFFER, fb);
+   SYM(glViewport)(0, 0, width, height);
    SYM(glClearColor)(0.2f, 0.2f, 0.2f, 1.0f);
    SYM(glClear)(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
    SYM(glEnable)(GL_DEPTH_TEST);
    SYM(glFrontFace)(GL_CW); // When we flip vertically, orientation changes.
    SYM(glEnable)(GL_CULL_FACE);
    SYM(glEnable)(GL_BLEND);
-
-   SYM(glViewport)(0, 0, width, height);
 
    for (unsigned i = 0; i < meshes.size(); i++)
       meshes[i]->render();
@@ -197,12 +226,15 @@ void retro_run(void)
    SYM(glDisable)(GL_BLEND);
    SYM(glDisable)(GL_DEPTH_TEST);
    SYM(glDisable)(GL_CULL_FACE);
+
    SYM(glBindFramebuffer)(GL_FRAMEBUFFER, 0);
    video_cb(RETRO_HW_FRAME_BUFFER_VALID, width, height, 0);
 }
 
 static void init_mesh(const string& path)
 {
+   retro_stderr("Loading Mesh ...\n");
+
    static const string vertex_shader =
       "uniform mat4 uModel;\n"
       "uniform mat4 uMVP;\n"
