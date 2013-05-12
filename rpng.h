@@ -19,6 +19,10 @@
 #include <stdint.h>
 #include "shared.hpp"
 
+// Modified version of RetroArch's PNG loader.
+// Uses bottom-left origin rather than top-left.
+// Also outputs RGBA byte order to work on GLES without extensions (GL_RGBA, GL_UNSIGNED_BYTE).
+
 #ifdef __cplusplus
 extern "C" {
 #endif
