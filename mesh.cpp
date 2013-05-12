@@ -51,6 +51,11 @@ namespace GL
       this->material = material;
    }
 
+   void Mesh::set_blank(const shared_ptr<Texture>& blank)
+   {
+      this->blank = blank;
+   }
+
    void Mesh::set_shader(const shared_ptr<Shader>& shader)
    {
       this->shader = shader;
@@ -81,13 +86,13 @@ namespace GL
 
       if (material.diffuse_map)
          material.diffuse_map->bind(0);
-      else
-         Texture::unbind(0);
+      else if (blank)
+         blank->bind(0);
 
       if (material.ambient_map)
          material.ambient_map->bind(1);
-      else
-         Texture::unbind(1);
+      else if (blank)
+         blank->bind(1);
 
       shader->use();
 

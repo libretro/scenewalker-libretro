@@ -50,6 +50,7 @@ namespace GL
          void set_vertices(const std1::shared_ptr<std::vector<Vertex> >& vertex);
          void set_vertex_type(GLenum type);
          void set_material(const Material& material);
+         void set_blank(const std1::shared_ptr<Texture>& blank);
          void set_shader(const std1::shared_ptr<Shader>& shader);
 
          void set_model(const glm::mat4& model);
@@ -66,6 +67,7 @@ namespace GL
          GLenum vertex_type;
          std1::shared_ptr<std::vector<Vertex> > vertex;
          std1::shared_ptr<Shader> shader;
+         std1::shared_ptr<Texture> blank;
 
          Material material;
          glm::vec3 light_dir;

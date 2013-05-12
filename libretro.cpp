@@ -29,6 +29,7 @@ static struct retro_hw_render_callback hw_render;
 static string mesh_path;
 
 static vector<shared_ptr<Mesh> > meshes;
+static shared_ptr<Texture> blank;
 
 void retro_init(void)
 {}
@@ -303,7 +304,7 @@ static void init_mesh(const string& path)
       "  float specularity = pow(clamp(dot(modelToFace, reflect(uLightDir, normal)), 0.0, 1.0), uMTLSpecularPower);\n"
       "  vec3 specular = uMTLSpecular * specularity;\n"
 
-      "  gl_FragColor = vec4(diffuse + ambient + specular, uMTLAlphaMod * colorDiffuseFull.a);\n"
+      "  gl_FragColor = vec4(diffuse + ambient + specular, uMTLAlphaMod);\n"
       "}";
 
    shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
@@ -315,6 +316,7 @@ static void init_mesh(const string& path)
    {
       meshes[i]->set_projection(projection);
       meshes[i]->set_shader(shader);
+      meshes[i]->set_blank(blank);
    }
 }
 
@@ -322,11 +324,13 @@ static void context_reset(void)
 {
    dead_state = true;
    meshes.clear();
+   blank.reset();
    dead_state = false;
 
    GL::set_function_cb(hw_render.get_proc_address);
    GL::init_symbol_map();
 
+   blank = Texture::blank();
    init_mesh(mesh_path);
 }
 
