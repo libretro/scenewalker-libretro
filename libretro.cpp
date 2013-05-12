@@ -16,8 +16,8 @@ using namespace std1;
 #define BASE_WIDTH 320
 #define BASE_HEIGHT 240
 #ifdef GLES
-#define MAX_WIDTH 512
-#define MAX_HEIGHT 512
+#define MAX_WIDTH 1024
+#define MAX_HEIGHT 1024
 #else
 #define MAX_WIDTH 1920
 #define MAX_HEIGHT 1600
@@ -106,7 +106,7 @@ void retro_set_environment(retro_environment_t cb)
    retro_variable variables[] = {
       { "modelviewer_resolution",
 #ifdef GLES
-         "Internal resolution; 320x240|360x480|480x272|512x384|512x512" },
+         "Internal resolution; 320x240|360x480|480x272|512x384|512x512|640x240|640x448|640x480|720x576|800x600|960x720|1024x768" },
 #else
          "Internal resolution; 320x240|360x480|480x272|512x384|512x512|640x240|640x448|640x480|720x576|800x600|960x720|1024x768|1280x720|1280x960|1600x1200|1920x1080|1920x1440|1920x1600" },
 #endif
