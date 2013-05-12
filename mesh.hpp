@@ -24,8 +24,8 @@ namespace GL
    struct Material
    {
       Material() :
-         ambient(1, 1, 1),
-         diffuse(1, 1, 1),
+         ambient(0, 0, 0),
+         diffuse(0, 0, 0),
          specular(0, 0, 0),
          specular_power(60.0),
          alpha_mod(1.0f)

@@ -287,9 +287,6 @@ static void init_mesh(const string& path)
       "  vec4 colorDiffuseFull = texture2D(sDiffuse, vTex);\n"
       "  vec4 colorAmbientFull = texture2D(sAmbient, vTex);\n"
 
-      "  if (colorDiffuseFull.a < 0.5)\n"
-      "    discard;\n"
-
       "  vec3 colorDiffuse = mix(uMTLDiffuse, colorDiffuseFull.rgb, vec3(colorDiffuseFull.a));\n"
       "  vec3 colorAmbient = mix(uMTLAmbient, colorAmbientFull.rgb, vec3(colorAmbientFull.a));\n"
 
@@ -303,7 +300,7 @@ static void init_mesh(const string& path)
       "  float specularity = pow(clamp(dot(modelToFace, reflect(uLightDir, normal)), 0.0, 1.0), uMTLSpecularPower);\n"
       "  vec3 specular = uMTLSpecular * specularity;\n"
 
-      "  gl_FragColor = vec4(diffuse + ambient + specular, uMTLAlphaMod);\n"
+      "  gl_FragColor = vec4(diffuse + ambient + specular, uMTLAlphaMod * colorDiffuseFull.a);\n"
       "}";
 
    shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
