@@ -16,27 +16,30 @@ ifeq ($(platform), unix)
    TARGET := libretro.so
    fpic := -fPIC
    SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
-   GL_LIB := -lGL -lz
+   GL_LIB := -lGL
+   LIBS := -lz
 else ifeq ($(platform), osx)
    TARGET := libretro.dylib
    fpic := -fPIC
    SHARED := -dynamiclib
-   GL_LIB := -framework OpenGL -lz
+   GL_LIB := -framework OpenGL
+   LIBS += -lz
 else ifeq ($(platform), qnx)
    TARGET := $(TARGET_NAME)_libretro_qnx.so
    fpic := -fPIC
    SHARED := -lcpp -lm -shared -Wl,-version-script=link.T -Wl,-no-undefined
-	CC = qcc -Vgcc_ntoarmv7le
-	CXX = QCC -Vgcc_ntoarmv7le_cpp
-	AR = QCC -Vgcc_ntoarmv7le
-	GLES = 1
-	INCFLAGS = -Iinclude/qnx
-	LIBS := -lz
+   CC = qcc -Vgcc_ntoarmv7le
+   CXX = QCC -Vgcc_ntoarmv7le_cpp
+   AR = QCC -Vgcc_ntoarmv7le
+   GLES = 1
+   INCFLAGS = -Iinclude/qnx
+   LIBS := -lz
 else
    CXX = g++
    TARGET := retro.dll
    SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=link.T -Wl,--no-undefined
-   GL_LIB := -lopengl32 -lz
+   GL_LIB := -lopengl32
+   LIBS := -lz
    INCFLAGS = -Iinclude/win32
 endif
 
