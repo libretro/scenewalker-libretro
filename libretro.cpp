@@ -241,7 +241,6 @@ void retro_run(void)
    SYM(glDisable)(GL_DEPTH_TEST);
    SYM(glDisable)(GL_CULL_FACE);
 
-   SYM(glBindFramebuffer)(GL_FRAMEBUFFER, 0);
    video_cb(RETRO_HW_FRAME_BUFFER_VALID, width, height, 0);
 }
 
