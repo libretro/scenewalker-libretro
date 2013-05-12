@@ -166,6 +166,20 @@ static void handle_input()
    if (abs(analog_ry) < 10000)
       analog_ry = 0;
 
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
+      analog_x -= 30000;
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
+      analog_x += 30000;
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP))
+      analog_y -= 30000;
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN))
+      analog_y += 30000;
+
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B))
+      analog_ry -= 30000;
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A))
+      analog_ry += 30000;
+
    model_scale *= 1.0f - analog_ry * 0.000001f;
    model_scale = clamp(model_scale, 0.1f, 100.0f);
    model_rotate_x += analog_y * 0.0001f;
