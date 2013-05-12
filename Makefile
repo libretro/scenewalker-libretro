@@ -12,18 +12,32 @@ else ifneq ($(findstring win,$(shell uname -a)),)
 endif
 endif
 
+TARGET_NAME := modelviewer
+
 ifeq ($(platform), unix)
-   TARGET := libretro.so
+   TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
    SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
    GL_LIB := -lGL
    LIBS := -lz
 else ifeq ($(platform), osx)
-   TARGET := libretro.dylib
+   TARGET := $(TARGET_NAME)_libretro.dylib
    fpic := -fPIC
    SHARED := -dynamiclib
    GL_LIB := -framework OpenGL
    LIBS += -lz
+else ifeq ($(platform), ios)
+	TARGET := $(TARGET_NAME)_libretro_ios.so
+	fpic := -fpic
+	SHARED := -dynamiclib
+	GL_LIB := -framework OpenGLES
+	LIBS += -lz
+   GLES = 1
+	CC = clang -arch arv7 -isysroot $(IOSSDK)
+	CXX = clang++ -arch armv7 -isysroot $(IOSSDK)
+	DEFINES := -DIOS
+	CFLAGS += $(DEFINES)
+	CXXFLAGS += $(DEFINES)
 else ifeq ($(platform), qnx)
    TARGET := $(TARGET_NAME)_libretro_qnx.so
    fpic := -fPIC
@@ -36,7 +50,7 @@ else ifeq ($(platform), qnx)
    LIBS := -lz
 else
    CXX = g++
-   TARGET := retro.dll
+   TARGET := $(TARGET_NAME)_retro.dll
    SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=link.T -Wl,--no-undefined
    GL_LIB := -lopengl32
    LIBS := -lz
@@ -66,7 +80,11 @@ CFLAGS += -Wall $(fpic)
 ifeq ($(GLES), 1)
    CXXFLAGS += -DGLES
    CFLAGS += -DGLES
+ifeq ($(platform), ios)
+   LIBS += $(GL_LIB)
+else
    LIBS += -lGLESv2
+endif
 else
    LIBS += $(GL_LIB)
 endif
