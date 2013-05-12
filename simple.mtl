@@ -1,5 +1,8 @@
 newmtl block
 Ka 1.0 1.0 1.0
 Kd 1.0 1.0 1.0
+Ks 0.2 0.2 0.2
+Ns 60.0
 map_Kd blockDiamond.png
+map_Ka blockDiamond.png
 d 1.0

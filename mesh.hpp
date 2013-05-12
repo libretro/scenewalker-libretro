@@ -37,6 +37,7 @@ namespace GL
       float specular_power;
       float alpha_mod;
       std1::shared_ptr<Texture> diffuse_map;
+      std1::shared_ptr<Texture> ambient_map;
    };
 
    class Mesh

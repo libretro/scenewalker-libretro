@@ -80,12 +80,14 @@ namespace GL
          return;
 
       if (material.diffuse_map)
-         material.diffuse_map->bind();
+         material.diffuse_map->bind(0);
+      if (material.ambient_map)
+         material.ambient_map->bind(1);
 
       shader->use();
 
       SYM(glUniform1i)(shader->uniform("sDiffuse"), 0);
-      SYM(glUniform1i)(shader->uniform("sAmbient"), 0);
+      SYM(glUniform1i)(shader->uniform("sAmbient"), 1);
 
       SYM(glUniformMatrix4fv)(shader->uniform("uModel"),
             1, GL_FALSE, value_ptr(model));
@@ -151,7 +153,8 @@ namespace GL
 
       SYM(glBindBuffer)(GL_ARRAY_BUFFER, 0);
 
-      Texture::unbind();
+      Texture::unbind(0);
+      Texture::unbind(1);
       Shader::unbind();
    }
 }

@@ -108,7 +108,7 @@ namespace OBJ
       }
    }
 
-   static map<string, Material> parse_mtllib(const string& path)
+   static map<string, Material> parse_mtllib(const string& path, map<string, shared_ptr<Texture> >& textures)
    {
       map<string, Material> materials;
 
@@ -149,8 +149,23 @@ namespace OBJ
             current.alpha_mod = 1.0f - String::stof(data);
          else if (type == "map_Kd")
          {
-            string diffuse_path = Path::join(Path::basedir(path), data);
-            current.diffuse_map = shared_ptr<Texture>(new Texture(diffuse_path));
+            if (!textures[data])
+            {
+               string diffuse_path = Path::join(Path::basedir(path), data);
+               textures[data] = shared_ptr<Texture>(new Texture(diffuse_path));
+            }
+
+            current.diffuse_map = textures[data];
+         }
+         else if (type == "map_Ka")
+         {
+            if (!textures[data])
+            {
+               string ambient_path = Path::join(Path::basedir(path), data);
+               textures[data] = shared_ptr<Texture>(new Texture(ambient_path));
+            }
+
+            current.ambient_map = textures[data];
          }
       }
 
@@ -214,6 +229,7 @@ namespace OBJ
 
             current_material = Material();
             current_material.diffuse_map = textures[data];
+            current_material.ambient_map = textures[data];
          }
          else if (type == "usemtl")
          {
@@ -230,7 +246,7 @@ namespace OBJ
             current_material = materials[data];
          }
          else if (type == "mtllib")
-            materials = parse_mtllib(Path::join(Path::basedir(path), data));
+            materials = parse_mtllib(Path::join(Path::basedir(path), data), textures);
       }
 
       if (vertices.size())
