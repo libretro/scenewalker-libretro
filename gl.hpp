@@ -7,8 +7,13 @@
 
 #define GL_GLEXT_PROTOTYPES
 #if defined(GLES)
+#ifdef IOS
+#include <OpenGLES/ES2/gl.h>
+#include <OpenGLES/ES2/glext.h>
+#else
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#endif
 #else
 #include <GL/gl.h>
 #include <GL/glext.h>
