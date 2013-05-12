@@ -27,13 +27,12 @@ else ifeq ($(platform), osx)
    GL_LIB := -framework OpenGL
    LIBS += -lz
 else ifeq ($(platform), ios)
-	TARGET := $(TARGET_NAME)_libretro_ios.so
+	TARGET := $(TARGET_NAME)_libretro_ios.dylib
 	fpic := -fpic
 	SHARED := -dynamiclib
 	GL_LIB := -framework OpenGLES
 	LIBS += -lz
    GLES = 1
-	CC = clang -arch arv7 -isysroot $(IOSSDK)
 	CXX = clang++ -arch armv7 -isysroot $(IOSSDK)
 	DEFINES := -DIOS
 	CFLAGS += $(DEFINES)
@@ -42,7 +41,6 @@ else ifeq ($(platform), qnx)
    TARGET := $(TARGET_NAME)_libretro_qnx.so
    fpic := -fPIC
    SHARED := -lcpp -lm -shared -Wl,-version-script=link.T -Wl,-no-undefined
-   CC = qcc -Vgcc_ntoarmv7le
    CXX = QCC -Vgcc_ntoarmv7le_cpp
    AR = QCC -Vgcc_ntoarmv7le
    GLES = 1
