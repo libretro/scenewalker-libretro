@@ -95,12 +95,17 @@ namespace GL
             1, value_ptr(material.ambient));
       SYM(glUniform3fv)(shader->uniform("uMTLDiffuse"),
             1, value_ptr(material.diffuse));
+      SYM(glUniform3fv)(shader->uniform("uMTLSpecular"),
+            1, value_ptr(material.specular));
+      SYM(glUniform1f)(shader->uniform("uMTLAlphaMod"),
+            material.alpha_mod);
 
       SYM(glUniform3fv)(shader->uniform("uLightDir"),
             1, value_ptr(light_dir));
 
       SYM(glUniform3fv)(shader->uniform("uLightAmbient"),
             1, value_ptr(light_ambient));
+
 
       GLint aVertex = shader->attrib("aVertex");
       GLint aNormal = shader->attrib("aNormal");

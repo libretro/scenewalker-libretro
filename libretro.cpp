@@ -232,16 +232,18 @@ static void init_mesh(const string& path)
       "uniform vec3 uLightDir;\n"
       "uniform vec3 uLightAmbient;\n"
       "uniform vec3 uMTLAmbient;\n"
+      "uniform float uMTLAlphaMod;\n"
       "uniform vec3 uMTLDiffuse;\n"
 
       "void main() {\n"
+      "  vec4 colorDiffuse = texture2D(sDiffuse, vTex);\n"
+      "  if (colorDiffuse.a < 0.5) discard;\n"
       "  vec3 normal = normalize(vNormal.xyz);\n"
       "  float directivity = dot(uLightDir, -normal);\n"
 
-      "  vec4 colorDiffuse = texture2D(sDiffuse, vTex);\n"
       "  vec3 diffuse = colorDiffuse.rgb * (clamp(directivity, 0.0, 1.0) + uLightAmbient * uMTLAmbient);\n"
 
-      "  gl_FragColor = vec4(diffuse, colorDiffuse.a);\n"
+      "  gl_FragColor = vec4(diffuse, uMTLAlphaMod * colorDiffuse.a);\n"
       "}";
 
    shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));

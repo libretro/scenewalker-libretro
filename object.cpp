@@ -108,6 +108,53 @@ namespace OBJ
       }
    }
 
+   static map<string, Material> parse_mtllib(const string& path)
+   {
+      map<string, Material> materials;
+
+      ifstream file(path.c_str(), ios::in);
+      if (!file.is_open())
+         return materials;
+
+      Material current;
+      string current_mtl;
+
+      for (string line; getline(file, line); )
+      {
+         line = line.substr(0, line.find_first_of('\r'));
+
+         size_t split_point = line.find_first_of(' ');
+         string type = line.substr(0, split_point);
+         string data = split_point != string::npos ? line.substr(split_point + 1) : string();
+
+         if (type == "newmtl")
+         {
+            if (current_mtl.size())
+               materials[current_mtl] = current;
+
+            current = Material();
+            current_mtl = data;
+         }
+         else if (type == "Ka")
+            current.ambient = parse_line<vec3>(data);
+         else if (type == "Kd")
+            current.diffuse = parse_line<vec3>(data);
+         else if (type == "Ks")
+            current.specular = parse_line<vec3>(data);
+         else if (type == "Tr" || type == "d")
+            current.alpha_mod = String::stof(data);
+         else if (type == "map_Kd")
+         {
+            string diffuse_path = Path::join(Path::basedir(path), data);
+            current.diffuse_map = shared_ptr<Texture>(new Texture(diffuse_path));
+         }
+      }
+
+      materials[current_mtl] = current;
+
+      return materials;
+   }
+
    vector<shared_ptr<Mesh> > load_from_file(const string& path)
    {
       ifstream file(path.c_str(), ios::in);
@@ -123,7 +170,9 @@ namespace OBJ
 
       // Texture cache.
       map<string, shared_ptr<Texture> > textures;
-      shared_ptr<Texture> current_texture;
+      Material current_material;
+
+      map<string, Material> materials;
 
       for (string line; getline(file, line); )
       {
@@ -141,8 +190,7 @@ namespace OBJ
             tex.push_back(parse_line<vec2>(data));
          else if (type == "f")
             parse_vertex(data, vertices, vertex, normal, tex);
-         else if (type == "texture" || // Not standard OBJ, but do it like this for simplicity ...
-               type == "usemtl") // will likely have to change when we start supporting materials better
+         else if (type == "texture") // Not standard OBJ, but do it like this for simplicity ...
          {
             if (vertices.size()) // Different texture, new mesh.
             {
@@ -150,10 +198,7 @@ namespace OBJ
                mesh->set_vertices(vertices);
                vertices.clear();
 
-               Material mat;
-               mat.diffuse_map = current_texture;
-               mesh->set_material(mat);
-
+               mesh->set_material(current_material);
                meshes.push_back(mesh);
             }
 
@@ -163,8 +208,25 @@ namespace OBJ
                textures[data] = shared_ptr<Texture>(new Texture(texture_path));
             }
 
-            current_texture = textures[data];
+            current_material = Material();
+            current_material.diffuse_map = textures[data];
          }
+         else if (type == "usemtl")
+         {
+            if (vertices.size()) // Different texture, new mesh.
+            {
+               shared_ptr<Mesh> mesh(new Mesh());
+               mesh->set_vertices(vertices);
+               vertices.clear();
+
+               mesh->set_material(current_material);
+               meshes.push_back(mesh);
+            }
+
+            current_material = materials[data];
+         }
+         else if (type == "mtllib")
+            materials = parse_mtllib(Path::join(Path::basedir(path), data + ".mtl"));
       }
 
       if (vertices.size())
@@ -173,11 +235,7 @@ namespace OBJ
          mesh->set_vertices(vertices);
          vertices.clear();
 
-         Material mat;
-         mat.diffuse_map = current_texture;
-
-         mesh->set_material(mat);
-
+         mesh->set_material(current_material);
          meshes.push_back(mesh);
       }
 
