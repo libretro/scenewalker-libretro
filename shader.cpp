@@ -25,7 +25,7 @@ namespace GL
 
          if (len > 0)
          {
-            std::vector<char> buf(len);
+            std::vector<char> buf(len + 1);
             GLsizei out_len;
             SYM(glGetProgramInfoLog)(prog, len, &out_len, buf.data());
 
@@ -53,7 +53,7 @@ namespace GL
 
          if (len > 0)
          {
-            std::vector<char> buf(len);
+            std::vector<char> buf(len + 1);
             GLsizei out_len;
             SYM(glGetShaderInfoLog)(shader, len, &out_len, buf.data());
 
