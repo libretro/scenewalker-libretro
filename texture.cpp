@@ -63,10 +63,10 @@ static bool texture_image_load_tga(const char *path,
    {
       for (unsigned i = 0; i < width * height; i++)
       {
-         data[i * 4 + 2] = tmp[i * 3 + 0];
-         data[i * 4 + 1] = tmp[i * 3 + 1];
-         data[i * 4 + 0] = tmp[i * 3 + 2];
-         data[i * 4 + 3] = tmp[i * 3 + 3];
+         data[i * 4 + 2] = tmp[i * 4 + 0];
+         data[i * 4 + 1] = tmp[i * 4 + 1];
+         data[i * 4 + 0] = tmp[i * 4 + 2];
+         data[i * 4 + 3] = tmp[i * 4 + 3];
       }
    }
    else if (bits == 24)
