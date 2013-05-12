@@ -31,15 +31,17 @@ else ifeq ($(platform), qnx)
 	AR = QCC -Vgcc_ntoarmv7le
 	GLES = 1
 	INCFLAGS = -Iinclude/qnx
-	CXXFLAGS += $(INCFLAGS)
-	CFLAGS += $(INCFLAGS)
 	LIBS := -lz
 else
    CXX = g++
    TARGET := retro.dll
    SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=link.T -Wl,--no-undefined
    GL_LIB := -lopengl32 -lz
+   INCFLAGS = -Iinclude/win32
 endif
+
+CXXFLAGS += $(INCFLAGS)
+CFLAGS += $(INCFLAGS)
 
 ifeq ($(DEBUG), 1)
    CXXFLAGS += -O0 -g
