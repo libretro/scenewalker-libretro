@@ -81,8 +81,13 @@ namespace GL
 
       if (material.diffuse_map)
          material.diffuse_map->bind(0);
+      else
+         Texture::unbind(0);
+
       if (material.ambient_map)
          material.ambient_map->bind(1);
+      else
+         Texture::unbind(1);
 
       shader->use();
 
