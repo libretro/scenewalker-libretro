@@ -182,7 +182,7 @@ static void handle_input()
       analog_ry += 30000;
 
    model_scale *= 1.0f - analog_ry * 0.000001f;
-   model_scale = clamp(model_scale, 0.1f, 100.0f);
+   model_scale = clamp(model_scale, 0.0001f, 100.0f);
    model_rotate_x += analog_y * 0.0001f;
    model_rotate_x = clamp(model_rotate_x, -80.0f, 80.0f);
    model_rotate_y += analog_x * 0.00015f;

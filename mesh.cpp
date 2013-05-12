@@ -91,6 +91,8 @@ namespace GL
 
       if (material.ambient_map)
          material.ambient_map->bind(1);
+      else if (material.diffuse_map)
+         material.diffuse_map->bind(1);
       else if (blank)
          blank->bind(1);
 
