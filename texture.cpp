@@ -1,10 +1,95 @@
 #include "texture.hpp"
 #include "rpng.h"
+#include "util.hpp"
 #include <stdint.h>
+#include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 using namespace std;
 using namespace std1;
+
+static bool texture_image_load_tga(const char *path,
+      uint8_t*& data, unsigned& width, unsigned& height)
+{
+   FILE *file = fopen(path, "rb");
+   if (!file)
+   {
+      retro_stderr_print("Failed to open image: %s.\n", path);
+      return false;
+   }
+
+   fseek(file, 0, SEEK_END);
+   long len = ftell(file);
+   rewind(file);
+
+   uint8_t* buffer = (uint8_t*)malloc(len);
+   if (!buffer)
+   {
+      fclose(file);
+      return false;
+   }
+
+   fread(buffer, 1, len, file);
+   fclose(file);
+
+   if (buffer[2] != 2) // Uncompressed RGB
+   {
+      retro_stderr_print("TGA image is not uncompressed RGB.\n");
+      free(buffer);
+      return false;
+   }
+
+   uint8_t info[6];
+   memcpy(info, buffer + 12, 6);
+
+   width = info[0] + ((unsigned)info[1] * 256);
+   height = info[2] + ((unsigned)info[3] * 256);
+   unsigned bits = info[4];
+
+   retro_stderr_print("Loaded TGA: (%ux%u @ %u bpp)\n", width, height, bits);
+
+   unsigned size = width * height * sizeof(uint32_t);
+   data = (uint8_t*)malloc(size);
+   if (!data)
+   {
+      retro_stderr_print("Failed to allocate TGA pixels.\n");
+      free(buffer);
+      return false;
+   }
+
+   const uint8_t *tmp = buffer + 18;
+   if (bits == 32)
+   {
+      for (unsigned i = 0; i < width * height; i++)
+      {
+         data[i * 4 + 2] = tmp[i * 3 + 0];
+         data[i * 4 + 1] = tmp[i * 3 + 1];
+         data[i * 4 + 0] = tmp[i * 3 + 2];
+         data[i * 4 + 3] = tmp[i * 3 + 3];
+      }
+   }
+   else if (bits == 24)
+   {
+      for (unsigned i = 0; i < width * height; i++)
+      {
+         data[i * 4 + 2] = tmp[i * 3 + 0];
+         data[i * 4 + 1] = tmp[i * 3 + 1];
+         data[i * 4 + 0] = tmp[i * 3 + 2];
+         data[i * 4 + 3] = 0xff;
+      }
+   }
+   else
+   {
+      retro_stderr_print("Bit depth of TGA image is wrong. Only 32-bit and 24-bit supported.\n");
+      free(buffer);
+      free(data);
+      return false;
+   }
+
+   free(buffer);
+   return true;
+}
 
 namespace GL
 {
@@ -48,8 +133,21 @@ namespace GL
       uint8_t* data = NULL;
       unsigned width = 0, height = 0;
 
-      bool ret = rpng_load_image_rgba(path.c_str(),
+      string ext = Path::ext(path);
+
+      bool ret = false;
+      if (ext == "png")
+      {
+         ret = rpng_load_image_rgba(path.c_str(),
             &data, &width, &height);
+      }
+      else if (ext == "tga")
+      {
+         ret = texture_image_load_tga(path.c_str(),
+            data, width, height);
+      }
+      else
+         retro_stderr_print("Unrecognized extension: \"%s\"\n", ext.c_str());
 
       if (ret)
       {

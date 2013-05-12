@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cstdlib>
+#include <vector>
 
 #define DIR_BACK(string) (string[string.length()-1])
 
@@ -24,6 +25,19 @@ namespace Path
       if (last != '/' && last != '\\')
          sep = "/";
       return dir + sep + path;
+   }
+
+   inline std::string ext(const std::string& path)
+   {
+      size_t last = path.find_last_of('.');
+      if (last == std::string::npos)
+         return "";
+
+      last++;
+      if (last == path.size())
+         return "";
+
+      return path.substr(last);
    }
 }
 
