@@ -31,6 +31,13 @@ static string mesh_path;
 static vector<shared_ptr<Mesh> > meshes;
 static shared_ptr<Texture> blank;
 
+struct Triangle
+{
+   vec3 a, b, c;
+   vec3 normal;
+};
+static vector<Triangle> triangles;
+
 void retro_init(void)
 {}
 
@@ -142,6 +149,12 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
    video_cb = cb;
 }
 
+static void collision_detection(vec3 player_pos, vec3& velocity)
+{
+   if (velocity == vec3(0.0))
+      return;
+}
+
 static void handle_input()
 {
    static float player_view_deg_x;
@@ -184,8 +197,13 @@ static void handle_input()
 
    vec3 right_walk_dir = vec3(rotate_y_right * vec4(0, 0, -1, 1));
    vec3 front_walk_dir = vec3(rotate_y * vec4(0, 0, -1, 1));
-   player_pos += front_walk_dir * vec3(analog_y * -0.000005f) +
+
+   vec3 velocity = front_walk_dir * vec3(analog_y * -0.000005f) +
       right_walk_dir * vec3(analog_x * 0.000005f);
+
+   collision_detection(player_pos, velocity);
+
+   player_pos += velocity;
 
    mat4 view = lookAt(player_pos, player_pos + look_dir, vec3(0, 1, 0));
 
@@ -315,6 +333,17 @@ static void init_mesh(const string& path)
       meshes[i]->set_projection(projection);
       meshes[i]->set_shader(shader);
       meshes[i]->set_blank(blank);
+
+      const std::vector<Vertex>& vertices = *meshes[i]->get_vertex();
+      for (unsigned v = 0; v < vertices.size(); v += 3)
+      {
+         Triangle tri;
+         tri.a = vertices[v + 0].vert;
+         tri.b = vertices[v + 1].vert;
+         tri.c = vertices[v + 2].vert;
+         tri.normal = -normalize(cross(tri.b - tri.a, tri.c - tri.a)); // Make normals point inward. Makes for simpler computation.
+         triangles.push_back(tri);
+      }
    }
 }
 
@@ -324,6 +353,8 @@ static void context_reset(void)
    meshes.clear();
    blank.reset();
    dead_state = false;
+
+   triangles.clear();
 
    GL::set_function_cb(hw_render.get_proc_address);
    GL::init_symbol_map();
