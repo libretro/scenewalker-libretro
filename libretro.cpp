@@ -210,6 +210,7 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
       return;
 
    float min_time = 1.0f;
+   float min_dot = length(velocity);
    const Triangle *closest_triangle = 0;
 
    for (unsigned i = 0; i < triangles.size(); i++)
@@ -227,9 +228,27 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
          if (ticks_to_hit >= 0.0f && ticks_to_hit < min_time)
          {
             vec3 projected_pos = (player_pos + tri.normal) + vec3(ticks_to_hit) * velocity; 
+
             if (inside_triangle(tri, projected_pos))
             {
                min_time = ticks_to_hit;
+               closest_triangle = &tri;
+            }
+
+         }
+         else if (plane_dist >= 0.0f && plane_dist < 1.0f)
+         {
+            float ticks_to_hit_face = plane_dist / towards_plane_v;
+            vec3 projected_direct_pos = player_pos + vec3(ticks_to_hit_face) * velocity;
+
+            // Lowest dot-product, more parallel with wall, decide on hugging that wall.
+            float dot_wall = dot(velocity, tri.normal);
+
+            if (inside_triangle(tri, projected_direct_pos) && dot_wall < min_dot)
+            {
+               //retro_stderr_print("Found nasty edge!\n");
+               min_time = ticks_to_hit; // Can end up "replaying" movement.
+               min_dot = dot_wall;
                closest_triangle = &tri;
             }
          }
