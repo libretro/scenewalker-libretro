@@ -35,6 +35,7 @@ struct Triangle
 {
    vec3 a, b, c;
    vec3 normal;
+   float n0;
 };
 static vector<Triangle> triangles;
 
@@ -149,10 +150,83 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
    video_cb = cb;
 }
 
-static void collision_detection(vec3 player_pos, vec3& velocity)
+static bool inside_triangle(const Triangle& tri, const vec3& pos)
+{
+   vec3 real_normal = -tri.normal;
+
+   vec3 ab = tri.b - tri.a;
+   vec3 ac = tri.c - tri.a;
+   vec3 ap = pos - tri.a;
+   vec3 bp = pos - tri.b;
+   vec3 bc = tri.c - tri.b;
+
+   if (dot(cross(ab, ap), real_normal) < 0.0f)
+      return false;
+
+   if (dot(cross(ap, ac), real_normal) < 0.0f)
+      return false;
+
+   if (dot(cross(bc, bp), real_normal) < 0.0f)
+      return false;
+
+   return true;
+}
+
+static void collision_detection(vec3& player_pos, vec3& velocity)
 {
    if (velocity == vec3(0.0))
       return;
+
+   float min_time = 1.0f;
+   const Triangle *closest_triangle = 0;
+
+   float min_dist = 1.0f;
+   const Triangle *closest_triangle_hug = 0;
+
+   for (unsigned i = 0; i < triangles.size(); i++)
+   {
+      const Triangle& tri = triangles[i];
+
+      float plane_dist = tri.n0 - dot(player_pos, tri.normal); 
+      float towards_plane_v = dot(velocity, tri.normal);
+
+      if (towards_plane_v > 0.0001f) // We're moving towards the plane.
+      {
+         float ticks_to_hit = (plane_dist - 1.0f) / towards_plane_v;
+         // We'll hit the plane in this frame.
+         if (ticks_to_hit >= 0.0f && ticks_to_hit < min_time)
+         {
+            vec3 projected_pos = (player_pos + tri.normal) + vec3(ticks_to_hit) * velocity; 
+            if (inside_triangle(tri, projected_pos))
+            {
+               min_time = ticks_to_hit;
+               closest_triangle = &tri;
+            }
+         }
+      }
+
+      // Might be hugging too close.
+      if (plane_dist >= 0.0f && plane_dist < min_dist)
+      {
+         vec3 projected_pos = player_pos + tri.normal * vec3(plane_dist); 
+         if (inside_triangle(tri, projected_pos))
+         {
+            min_dist = plane_dist;
+            closest_triangle_hug = &tri;
+         }
+      }
+   }
+   
+   if (closest_triangle)
+   {
+      // Make velocity vector parallel with plane.
+      velocity -= vec3(dot(velocity, closest_triangle->a) / closest_triangle->n0) * closest_triangle->normal;
+   }
+   if (closest_triangle_hug)
+   {
+      // Push player out.
+      player_pos += vec3(min_dist - 1.0f) * closest_triangle_hug->normal;
+   }
 }
 
 static void handle_input()
@@ -342,6 +416,7 @@ static void init_mesh(const string& path)
          tri.b = vertices[v + 1].vert;
          tri.c = vertices[v + 2].vert;
          tri.normal = -normalize(cross(tri.b - tri.a, tri.c - tri.a)); // Make normals point inward. Makes for simpler computation.
+         tri.n0 = dot(tri.normal, tri.a); // Plane constant
          triangles.push_back(tri);
       }
    }
