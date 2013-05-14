@@ -219,9 +219,13 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
    
    if (closest_triangle)
    {
+      // Move player to wall.
+      player_pos += vec3(min_time) * velocity;
+
       // Make velocity vector parallel with plane.
       velocity -= vec3(dot(velocity, closest_triangle->a) / closest_triangle->n0) * closest_triangle->normal;
    }
+
    if (closest_triangle_hug)
    {
       // Push player out.
@@ -249,6 +253,9 @@ static void handle_input()
    int analog_rx = input_state_cb(0, RETRO_DEVICE_ANALOG,
          RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X);
 
+   bool jump = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+         RETRO_DEVICE_ID_JOYPAD_B);
+
    if (abs(analog_x) < 10000)
       analog_x = 0;
    if (abs(analog_y) < 10000)
@@ -258,7 +265,7 @@ static void handle_input()
    if (abs(analog_ry) < 10000)
       analog_ry = 0;
 
-   player_view_deg_y += analog_rx * -0.00005f;
+   player_view_deg_y += analog_rx * -0.00008f;
    player_view_deg_x += analog_ry * -0.00005f;
 
    player_view_deg_x = clamp(player_view_deg_x, -80.0f, 80.0f);
@@ -276,8 +283,27 @@ static void handle_input()
       right_walk_dir * vec3(analog_x * 0.000005f);
 
    collision_detection(player_pos, velocity);
-
    player_pos += velocity;
+
+   static vec3 gravity;
+   static bool can_jump;
+   gravity += vec3(0.0f, -0.01f, 0.0f);
+   if (can_jump && jump)
+   {
+      gravity[1] += 0.3f;
+      can_jump = false;
+   }
+   gravity[1] -= gravity[1] * 0.01f;
+
+   vec3 old_gravity = gravity;
+   collision_detection(player_pos, gravity);
+   player_pos += gravity;
+
+   if (old_gravity != gravity)
+   {
+      gravity = vec3(0.0f);
+      can_jump = true;
+   }
 
    mat4 view = lookAt(player_pos, player_pos + look_dir, vec3(0, 1, 0));
 
