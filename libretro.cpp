@@ -150,6 +150,7 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
    video_cb = cb;
 }
 
+// Probably not the most efficient way to do collision handling ... :)
 static bool inside_triangle(const Triangle& tri, const vec3& pos)
 {
    vec3 real_normal = -tri.normal;
@@ -172,6 +173,36 @@ static bool inside_triangle(const Triangle& tri, const vec3& pos)
    return true;
 }
 
+static void wall_hug_detection(vec3& player_pos)
+{
+   float min_dist = 1.0f;
+   const Triangle *closest_triangle_hug = 0;
+
+   for (unsigned i = 0; i < triangles.size(); i++)
+   {
+      const Triangle& tri = triangles[i];
+      float plane_dist = tri.n0 - dot(player_pos, tri.normal); 
+
+      // Might be hugging too close.
+      if (plane_dist >= 0.0f && plane_dist < min_dist)
+      {
+         vec3 projected_pos = player_pos + tri.normal * vec3(plane_dist); 
+         if (inside_triangle(tri, projected_pos))
+         {
+            min_dist = plane_dist;
+            closest_triangle_hug = &tri;
+         }
+      }
+   }
+
+   if (closest_triangle_hug)
+   {
+      retro_stderr_print("Fixup hugging: Dist: %.6f.\n", min_dist);
+      // Push player out.
+      player_pos += vec3(min_dist - 1.0f) * closest_triangle_hug->normal;
+   }
+}
+
 static void collision_detection(vec3& player_pos, vec3& velocity)
 {
    if (velocity == vec3(0.0))
@@ -180,9 +211,6 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
    float min_time = 1.0f;
    const Triangle *closest_triangle = 0;
 
-   float min_dist = 1.0f;
-   const Triangle *closest_triangle_hug = 0;
-
    for (unsigned i = 0; i < triangles.size(); i++)
    {
       const Triangle& tri = triangles[i];
@@ -190,7 +218,7 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
       float plane_dist = tri.n0 - dot(player_pos, tri.normal); 
       float towards_plane_v = dot(velocity, tri.normal);
 
-      if (towards_plane_v > 0.0001f) // We're moving towards the plane.
+      if (towards_plane_v > 0.00001f) // We're moving towards the plane.
       {
          float ticks_to_hit = (plane_dist - 1.0f) / towards_plane_v;
          // We'll hit the plane in this frame.
@@ -205,16 +233,6 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
          }
       }
 
-      // Might be hugging too close.
-      if (plane_dist >= 0.0f && plane_dist < min_dist)
-      {
-         vec3 projected_pos = player_pos + tri.normal * vec3(plane_dist); 
-         if (inside_triangle(tri, projected_pos))
-         {
-            min_dist = plane_dist;
-            closest_triangle_hug = &tri;
-         }
-      }
    }
    
    if (closest_triangle)
@@ -223,14 +241,13 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
       player_pos += vec3(min_time) * velocity;
 
       // Make velocity vector parallel with plane.
-      velocity -= vec3(dot(velocity, closest_triangle->a) / closest_triangle->n0) * closest_triangle->normal;
-   }
+      velocity -= vec3(dot(velocity, closest_triangle->normal)) * closest_triangle->normal;
+      retro_stderr_print("Fixup V: %.6f, %.6f, %.6f\n", velocity[0], velocity[1], velocity[2]);
 
-   if (closest_triangle_hug)
-   {
-      // Push player out.
-      player_pos += vec3(min_dist - 1.0f) * closest_triangle_hug->normal;
+      player_pos += velocity * vec3(1.0f - min_time); // Used up some time.
    }
+   else
+      player_pos += velocity;
 }
 
 static void handle_input()
@@ -283,7 +300,7 @@ static void handle_input()
       right_walk_dir * vec3(analog_x * 0.000005f);
 
    collision_detection(player_pos, velocity);
-   player_pos += velocity;
+   wall_hug_detection(player_pos);
 
    static vec3 gravity;
    static bool can_jump;
@@ -297,7 +314,7 @@ static void handle_input()
 
    vec3 old_gravity = gravity;
    collision_detection(player_pos, gravity);
-   player_pos += gravity;
+   wall_hug_detection(player_pos);
 
    if (old_gravity != gravity)
    {
