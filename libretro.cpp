@@ -161,6 +161,7 @@ static bool inside_triangle(const Triangle& tri, const vec3& pos)
    vec3 bp = pos - tri.b;
    vec3 bc = tri.c - tri.b;
 
+   // Checks if point exists inside triangle.
    if (dot(cross(ab, ap), real_normal) < 0.0f)
       return false;
 
@@ -184,7 +185,7 @@ static void wall_hug_detection(vec3& player_pos)
       float plane_dist = tri.n0 - dot(player_pos, tri.normal); 
 
       // Might be hugging too close.
-      if (plane_dist >= 0.0f && plane_dist < min_dist)
+      if (plane_dist >= -1.0f && plane_dist < min_dist)
       {
          vec3 projected_pos = player_pos + tri.normal * vec3(plane_dist); 
          if (inside_triangle(tri, projected_pos))
@@ -197,7 +198,7 @@ static void wall_hug_detection(vec3& player_pos)
 
    if (closest_triangle_hug)
    {
-      retro_stderr_print("Fixup hugging: Dist: %.6f.\n", min_dist);
+      //retro_stderr_print("Fixup hugging: Dist: %.6f.\n", min_dist);
       // Push player out.
       player_pos += vec3(min_dist - 1.0f) * closest_triangle_hug->normal;
    }
@@ -221,6 +222,7 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
       if (towards_plane_v > 0.00001f) // We're moving towards the plane.
       {
          float ticks_to_hit = (plane_dist - 1.0f) / towards_plane_v;
+
          // We'll hit the plane in this frame.
          if (ticks_to_hit >= 0.0f && ticks_to_hit < min_time)
          {
@@ -232,7 +234,6 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
             }
          }
       }
-
    }
    
    if (closest_triangle)
@@ -242,7 +243,7 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
 
       // Make velocity vector parallel with plane.
       velocity -= vec3(dot(velocity, closest_triangle->normal)) * closest_triangle->normal;
-      retro_stderr_print("Fixup V: %.6f, %.6f, %.6f\n", velocity[0], velocity[1], velocity[2]);
+      //retro_stderr_print("Fixup V: %.6f, %.6f, %.6f\n", velocity[0], velocity[1], velocity[2]);
 
       player_pos += velocity * vec3(1.0f - min_time); // Used up some time.
    }
