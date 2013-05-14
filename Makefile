@@ -89,13 +89,15 @@ endif
 
 all: $(TARGET)
 
+HEADERS := $(wildcard *.hpp) $(wildcard *.h)
+
 $(TARGET): $(OBJECTS)
 	$(CXX) $(fpic) $(SHARED) $(INCLUDES) -o $@ $(OBJECTS) $(LIBS) -lm
 
-%.o: %.cpp
+%.o: %.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-%.o: %.c
+%.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:

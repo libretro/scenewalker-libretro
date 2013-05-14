@@ -8,7 +8,7 @@ namespace GL
 {
    Mesh::Mesh() : 
       vertex_type(GL_TRIANGLES),
-      light_dir(normalize(vec3(-1, -1, -1))),
+      light_pos(0, 10, 0),
       light_ambient(0.25f, 0.25f, 0.25f),
       model(mat4(1.0)),
       view(mat4(1.0)),
@@ -34,6 +34,16 @@ namespace GL
    void Mesh::set_vertex_type(GLenum type)
    {
       vertex_type = type;
+   }
+
+   void Mesh::set_light_pos(const glm::vec3& light_pos)
+   {
+      this->light_pos = light_pos;
+   }
+
+   void Mesh::set_eye(const vec3& eye_pos)
+   {
+      this->eye_pos = eye_pos;
    }
 
    void Mesh::set_vertices(const shared_ptr<vector<Vertex> >& vertex)
@@ -105,6 +115,8 @@ namespace GL
             1, GL_FALSE, value_ptr(model));
       SYM(glUniformMatrix4fv)(shader->uniform("uMVP"),
             1, GL_FALSE, value_ptr(mvp));
+      SYM(glUniform3fv)(shader->uniform("uEyePos"),
+            1, value_ptr(eye_pos));
 
       SYM(glUniform3fv)(shader->uniform("uMTLAmbient"),
             1, value_ptr(material.ambient));
@@ -117,8 +129,8 @@ namespace GL
       SYM(glUniform1f)(shader->uniform("uMTLAlphaMod"),
             material.alpha_mod);
 
-      SYM(glUniform3fv)(shader->uniform("uLightDir"),
-            1, value_ptr(light_dir));
+      SYM(glUniform3fv)(shader->uniform("uLightPos"),
+            1, value_ptr(light_pos));
 
       SYM(glUniform3fv)(shader->uniform("uLightAmbient"),
             1, value_ptr(light_ambient));

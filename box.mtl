@@ -1,0 +1,5 @@
+newmtl block
+Ks 1.0 1.0 1.0
+Ns 50.0
+d 1.0
+map_Kd blockDiamond.png

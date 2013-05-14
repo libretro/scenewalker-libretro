@@ -144,9 +144,9 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
 
 static void handle_input()
 {
-   static float model_rotate_y;
-   static float model_rotate_x;
-   static float model_scale = 1.0f;
+   static float player_view_deg_x;
+   static float player_view_deg_y;
+   static vec3 player_pos;
 
    input_poll_cb();
 
@@ -159,42 +159,41 @@ static void handle_input()
    int analog_ry = input_state_cb(0, RETRO_DEVICE_ANALOG,
          RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y);
 
+   int analog_rx = input_state_cb(0, RETRO_DEVICE_ANALOG,
+         RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X);
+
    if (abs(analog_x) < 10000)
       analog_x = 0;
    if (abs(analog_y) < 10000)
       analog_y = 0;
-
+   if (abs(analog_rx) < 10000)
+      analog_rx = 0;
    if (abs(analog_ry) < 10000)
       analog_ry = 0;
 
-   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
-      analog_x -= 30000;
-   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
-      analog_x += 30000;
-   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP))
-      analog_y -= 30000;
-   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN))
-      analog_y += 30000;
+   player_view_deg_y += analog_rx * -0.00005f;
+   player_view_deg_x += analog_ry * -0.00005f;
 
-   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B))
-      analog_ry -= 30000;
-   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A))
-      analog_ry += 30000;
+   player_view_deg_x = clamp(player_view_deg_x, -80.0f, 80.0f);
+   
+   mat4 rotate_x = rotate(mat4(1.0), player_view_deg_x, vec3(1, 0, 0));
+   mat4 rotate_y = rotate(mat4(1.0), player_view_deg_y, vec3(0, 1, 0));
+   mat4 rotate_y_right = rotate(mat4(1.0), player_view_deg_y - 90.0f, vec3(0, 1, 0));
 
-   model_scale *= 1.0f - analog_ry * 0.000001f;
-   model_scale = clamp(model_scale, 0.0001f, 100.0f);
-   model_rotate_x += analog_y * 0.0001f;
-   model_rotate_y += analog_x * 0.00015f;
+   vec3 look_dir = vec3(rotate_y * rotate_x * vec4(0, 0, -1, 1));
 
-   mat4 translation = translate(mat4(1.0), vec3(0, 0, -40));
-   mat4 scaler = scale(mat4(1.0), vec3(model_scale, model_scale, model_scale));
-   mat4 rotate_x = rotate(mat4(1.0), model_rotate_x, vec3(1, 0, 0));
-   mat4 rotate_y = rotate(mat4(1.0), model_rotate_y, vec3(0, 1, 0));
+   vec3 right_walk_dir = vec3(rotate_y_right * vec4(0, 0, -1, 1));
+   vec3 front_walk_dir = vec3(rotate_y * vec4(0, 0, -1, 1));
+   player_pos += front_walk_dir * vec3(analog_y * -0.000005f) +
+      right_walk_dir * vec3(analog_x * 0.000005f);
 
-   mat4 model = translation * scaler * rotate_x * rotate_y;
+   mat4 view = lookAt(player_pos, player_pos + look_dir, vec3(0, 1, 0));
 
    for (unsigned i = 0; i < meshes.size(); i++)
-      meshes[i]->set_model(model);
+   {
+      meshes[i]->set_view(view);
+      meshes[i]->set_eye(player_pos);
+   }
 }
 
 static void update_variables()
@@ -275,8 +274,9 @@ static void init_mesh(const string& path)
       "uniform sampler2D sDiffuse;\n"
       "uniform sampler2D sAmbient;\n"
 
-      "uniform vec3 uLightDir;\n"
+      "uniform vec3 uLightPos;\n"
       "uniform vec3 uLightAmbient;\n"
+      "uniform vec3 uEyePos;\n"
       "uniform vec3 uMTLAmbient;\n"
       "uniform float uMTLAlphaMod;\n"
       "uniform vec3 uMTLDiffuse;\n"
@@ -287,17 +287,19 @@ static void init_mesh(const string& path)
       "  vec4 colorDiffuseFull = texture2D(sDiffuse, vTex);\n"
       "  vec4 colorAmbientFull = texture2D(sAmbient, vTex);\n"
 
+      "  vec3 lightDir = normalize(vPos.xyz - uLightPos);\n"
+
       "  vec3 colorDiffuse = mix(uMTLDiffuse, colorDiffuseFull.rgb, vec3(colorDiffuseFull.a));\n"
       "  vec3 colorAmbient = mix(uMTLAmbient, colorAmbientFull.rgb, vec3(colorAmbientFull.a));\n"
 
       "  vec3 normal = normalize(vNormal.xyz);\n"
-      "  float directivity = dot(uLightDir, -normal);\n"
+      "  float directivity = dot(lightDir, -normal);\n"
 
       "  vec3 diffuse = colorDiffuse * clamp(directivity, 0.0, 1.0);\n"
       "  vec3 ambient = colorAmbient * uLightAmbient;\n"
 
-      "  vec3 modelToFace = normalize(-vPos.xyz);\n"
-      "  float specularity = pow(clamp(dot(modelToFace, reflect(uLightDir, normal)), 0.0, 1.0), uMTLSpecularPower);\n"
+      "  vec3 modelToFace = normalize(uEyePos - vPos.xyz);\n"
+      "  float specularity = pow(clamp(dot(modelToFace, reflect(lightDir, normal)), 0.0, 1.0), uMTLSpecularPower);\n"
       "  vec3 specular = uMTLSpecular * specularity;\n"
 
       "  gl_FragColor = vec4(diffuse + ambient + specular, uMTLAlphaMod * colorDiffuseFull.a);\n"
@@ -306,7 +308,7 @@ static void init_mesh(const string& path)
    shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
    meshes = OBJ::load_from_file(path);
 
-   mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 640.0f / 480.0f, 1.0f, 100.0f);
+   mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 4.0f / 3.0f, 0.5f, 50.0f);
 
    for (unsigned i = 0; i < meshes.size(); i++)
    {

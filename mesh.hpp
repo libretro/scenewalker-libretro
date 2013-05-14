@@ -56,8 +56,9 @@ namespace GL
          void set_model(const glm::mat4& model);
          void set_view(const glm::mat4& view);
          void set_projection(const glm::mat4& projection);
+         void set_eye(const glm::vec3& eye_pos);
 
-         void set_light_dir(const glm::vec3& light_dir);
+         void set_light_pos(const glm::vec3& light_pos);
          void set_light_ambient(const glm::vec3& light_ambient);
 
          void render();
@@ -70,8 +71,9 @@ namespace GL
          std1::shared_ptr<Texture> blank;
 
          Material material;
-         glm::vec3 light_dir;
+         glm::vec3 light_pos;
          glm::vec3 light_ambient;
+         glm::vec3 eye_pos;
 
          glm::mat4 model;
          glm::mat4 view;
