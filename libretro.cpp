@@ -7,6 +7,7 @@
 #include <string>
 #include <stdint.h>
 #include "shared.hpp"
+#include <assert.h>
 
 using namespace GL;
 using namespace glm;
@@ -595,6 +596,30 @@ static void context_reset(void)
    init_mesh(mesh_path);
 }
 
+static inline bool fequal(float a, float b)
+{
+   return std::fabs(a - b) < 0.0001f;
+}
+
+static void test_crash_detection()
+{
+   vec3 pos = vec3(0.0f);
+   
+   float a = point_crash_time(pos, vec3(1, 0, 0), vec3(3, 0, 0));
+   assert(fequal(a, 2.0f));
+
+   float b = point_crash_time(pos, vec3(1, 0, 0), vec3(2, 2, 0));
+   assert(fequal(b, 10.0f));
+
+   float c = point_crash_time(pos, vec3(1, 0, 0), vec3(1.0, 0.5, 0.0));
+   assert(fequal(c, 1.0f - std::cos(30.0f / 180.0f * M_PI)));
+
+   float d = point_crash_time(pos, vec3(0, 1, 0), vec3(0.5, 1.0, 0.0));
+   assert(fequal(d, 1.0f - std::cos(30.0f / 180.0f * M_PI)));
+
+   retro_stderr_print("Collision tests passed!\n");
+}
+
 bool retro_load_game(const struct retro_game_info *info)
 {
    enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
@@ -614,6 +639,8 @@ bool retro_load_game(const struct retro_game_info *info)
    hw_render.depth = true;
    if (!environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &hw_render))
       return false;
+
+   test_crash_detection();
 
    mesh_path = info->path;
    update_variables();
