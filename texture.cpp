@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "gli/gli.hpp"
+#include "gli/gtx/gl_texture2d.hpp"
 
 using namespace std;
 using namespace std1;
@@ -141,27 +143,40 @@ namespace GL
 
       string ext = Path::ext(path);
 
-      bool ret = false;
-      if (ext == "png")
+      if (ext == "dds")
       {
-         ret = rpng_load_image_rgba(path.c_str(),
-            &data, &width, &height);
-      }
-      else if (ext == "tga")
-      {
-         ret = texture_image_load_tga(path.c_str(),
-            data, width, height);
+         retro_stderr_print("Loading DDS: %s.\n", path.c_str());
+         tex = gli::createTexture2D(path);
+         retro_stderr_print("Error: 0x%x\n", SYM(glGetError)());
       }
       else
-         retro_stderr_print("Unrecognized extension: \"%s\"\n", ext.c_str());
+      {
+         bool ret = false;
+         if (ext == "png")
+         {
+            ret = rpng_load_image_rgba(path.c_str(),
+                  &data, &width, &height);
+         }
+         else if (ext == "tga")
+         {
+            ret = texture_image_load_tga(path.c_str(),
+                  data, width, height);
+         }
+         else if (ext == "dds")
+         {
+            return;
+         }
+         else
+            retro_stderr_print("Unrecognized extension: \"%s\"\n", ext.c_str());
 
-      if (ret)
-      {
-         upload_data(data, width, height, true);
-         free(data);
+         if (ret)
+         {
+            upload_data(data, width, height, true);
+            free(data);
+         }
+         else
+            retro_stderr_print("Failed to load image: %s\n", path.c_str());
       }
-      else
-         retro_stderr_print("Failed to load image: %s\n", path.c_str());
    }
 
    Texture::~Texture()

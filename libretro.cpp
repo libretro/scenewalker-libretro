@@ -151,7 +151,7 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
 }
 
 // Probably not the most efficient way to do collision handling ... :)
-static bool inside_triangle(const Triangle& tri, const vec3& pos)
+static inline bool inside_triangle(const Triangle& tri, const vec3& pos)
 {
    vec3 real_normal = -tri.normal;
 
@@ -174,6 +174,75 @@ static bool inside_triangle(const Triangle& tri, const vec3& pos)
    return true;
 }
 
+// Here be dragons. 2-3 pages of mathematical derivations.
+static inline float point_crash_time(const vec3& pos, const vec3& v, const vec3& edge)
+{
+   vec3 l = pos - edge;
+
+   float A = dot(v, v);
+   float B = 2 * dot(l, v);
+   float C = dot(l, l) - 1;
+
+   float d = B * B - 4.0f * A * C;
+   if (d < 0.0f) // No solution, can't hit the sphere ever.
+      return 10.0f; // Return number > 1.0f to signal no collision. Makes taking min() easier.
+
+   float d_sqrt = std::sqrt(d);
+   float sol0 = (-B + d_sqrt) / (2.0f * A);
+   float sol1 = (-B - d_sqrt) / (2.0f * A);
+   if (sol0 >= 0.0f && sol1 >= 0.0f)
+      return std::min(sol0, sol1);
+   else if (sol0 >= 0.0f && sol1 < 0.0f)
+      return sol0;
+   else if (sol0 < 0.0f && sol1 >= 0.0f)
+      return sol1;
+
+   return 10.0f;
+}
+
+static inline float line_crash_time(const vec3& pos, const vec3& v, const vec3& a, const vec3& b)
+{
+   vec3 ab = b - a;
+   vec3 d = pos - a;
+
+   float ab_sqr = dot(ab, ab);
+   float T = dot(ab, v) / ab_sqr;
+   float S = dot(ab, d) / ab_sqr;
+
+   vec3 V = v + vec3(T) * ab;
+   vec3 W = d - vec3(S) * ab;
+
+   float A = dot(V, V);
+   float B = 2.0f * dot(V, W);
+   float C = dot(W, W) - 1.0f;
+
+   float D = B * B - 4.0f * A * C; 
+   if (D < 0.0f) // No solutions exist :(
+      return 10.0f;
+
+   float D_sqrt = std::sqrt(D);
+   float sol0 = (-B + D_sqrt) / (2.0f * A);
+   float sol1 = (-B - D_sqrt) / (2.0f * A);
+
+   float solution;
+   if (sol0 >= 0.0f && sol1 >= 0.0f)
+      solution = std::min(sol0, sol1);
+   else if (sol0 >= 0.0f && sol1 < 0.0f)
+      solution = sol0;
+   else if (sol0 < 0.0f && sol1 >= 0.0f)
+      solution = sol1;
+   else
+      return 10.0f;
+
+   // Check if solution hits the actual line ...
+   float k = dot(ab, d + vec3(solution) * v) / ab_sqr;
+   if (k >= 0.0f && k <= 1.0f)
+      return k;
+   else
+      return 10.0f;
+}
+/////////// End dragons
+
 static void wall_hug_detection(vec3& player_pos)
 {
    float min_dist = 1.0f;
@@ -185,7 +254,7 @@ static void wall_hug_detection(vec3& player_pos)
       float plane_dist = tri.n0 - dot(player_pos, tri.normal); 
 
       // Might be hugging too close.
-      if (plane_dist >= -1.0f && plane_dist < min_dist)
+      if (plane_dist >= -0.001f && plane_dist < min_dist)
       {
          vec3 projected_pos = player_pos + tri.normal * vec3(plane_dist); 
          if (inside_triangle(tri, projected_pos))
@@ -209,8 +278,10 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
    if (velocity == vec3(0.0))
       return;
 
+   vec3 normalized_velocity = normalize(velocity);
+
    float min_time = 1.0f;
-   float min_dot = length(velocity);
+   bool crash = false;
    const Triangle *closest_triangle = 0;
 
    for (unsigned i = 0; i < triangles.size(); i++)
@@ -233,41 +304,62 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
             {
                min_time = ticks_to_hit;
                closest_triangle = &tri;
+               crash = false;
             }
 
          }
          else if (plane_dist >= 0.0f && plane_dist < 1.0f)
          {
-            float ticks_to_hit_face = plane_dist / towards_plane_v;
-            vec3 projected_direct_pos = player_pos + vec3(ticks_to_hit_face) * velocity;
+            float dot_wall = dot(normalized_velocity, tri.normal);
 
-            // Lowest dot-product, more parallel with wall, decide on hugging that wall.
-            float dot_wall = dot(velocity, tri.normal);
+            float wall_distance = plane_dist / dot_wall;
+            vec3 projected_direct_pos = player_pos + vec3(wall_distance) * normalized_velocity;
 
-            if (inside_triangle(tri, projected_direct_pos) && dot_wall < min_dot)
+            if (inside_triangle(tri, projected_direct_pos))
             {
-               //retro_stderr_print("Found nasty edge!\n");
-               min_time = ticks_to_hit; // Can end up "replaying" movement.
-               min_dot = dot_wall;
-               closest_triangle = &tri;
+               // Check how we can hit the triangle. Can hit edges or lines ...
+               float time_point_a = point_crash_time(player_pos, velocity, tri.a);
+               float time_point_b = point_crash_time(player_pos, velocity, tri.b);
+               float time_point_c = point_crash_time(player_pos, velocity, tri.c);
+
+               float time_line_ab = line_crash_time(player_pos, velocity, tri.a, tri.b);
+               float time_line_ac = line_crash_time(player_pos, velocity, tri.a, tri.c);
+               float time_line_bc = line_crash_time(player_pos, velocity, tri.b, tri.c);
+
+               float min_time_point = std::min(std::min(time_point_a, time_point_b), time_point_c);
+               float min_time_line  = std::min(std::min(time_line_ab, time_line_bc), time_line_ac);
+               float min_time_crash = std::min(min_time_point, min_time_line);
+
+               if (min_time_crash < min_time)
+               {
+                  min_time = min_time_crash;
+                  closest_triangle = &tri;
+                  crash = true;
+               }
             }
          }
       }
    }
-   
+
+  
    if (closest_triangle)
    {
-      // Move player to wall.
-      player_pos += vec3(min_time) * velocity;
+      vec3 normal = closest_triangle->normal;
 
-      // Make velocity vector parallel with plane.
-      velocity -= vec3(dot(velocity, closest_triangle->normal)) * closest_triangle->normal;
-      //retro_stderr_print("Fixup V: %.6f, %.6f, %.6f\n", velocity[0], velocity[1], velocity[2]);
+      if (!crash)
+      {
+         // Move player to wall.
+         player_pos += vec3(min_time) * velocity;
 
-      player_pos += velocity * vec3(1.0f - min_time); // Used up some time.
+         // Make velocity vector parallel with plane.
+         velocity -= vec3(dot(velocity, normal)) * normal;
+         //retro_stderr_print("Fixup V: %.6f, %.6f, %.6f\n", velocity[0], velocity[1], velocity[2]);
+
+         velocity *= vec3(1.0f - min_time);
+      }
+      else
+         velocity = vec3(0.0f);
    }
-   else
-      player_pos += velocity;
 }
 
 static void handle_input()
@@ -320,6 +412,7 @@ static void handle_input()
       right_walk_dir * vec3(analog_x * 0.000005f);
 
    collision_detection(player_pos, velocity);
+   player_pos += velocity;
    wall_hug_detection(player_pos);
 
    static vec3 gravity;
@@ -334,13 +427,14 @@ static void handle_input()
 
    vec3 old_gravity = gravity;
    collision_detection(player_pos, gravity);
-   wall_hug_detection(player_pos);
-
    if (old_gravity != gravity)
    {
       gravity = vec3(0.0f);
       can_jump = true;
    }
+
+   player_pos += gravity;
+   wall_hug_detection(player_pos);
 
    mat4 view = lookAt(player_pos, player_pos + look_dir, vec3(0, 1, 0));
 
@@ -463,7 +557,7 @@ static void init_mesh(const string& path)
    shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
    meshes = OBJ::load_from_file(path);
 
-   mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 4.0f / 3.0f, 0.5f, 50.0f);
+   mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 4.0f / 3.0f, 0.5f, 100.0f);
 
    for (unsigned i = 0; i < meshes.size(); i++)
    {
