@@ -175,6 +175,8 @@ static inline bool inside_triangle(const Triangle& tri, const vec3& pos)
    return true;
 }
 
+static const float twiddle_factor = -0.5f;
+
 // Here be dragons. 2-3 pages of mathematical derivations.
 static inline float point_crash_time(const vec3& pos, const vec3& v, const vec3& edge)
 {
@@ -191,11 +193,11 @@ static inline float point_crash_time(const vec3& pos, const vec3& v, const vec3&
    float d_sqrt = std::sqrt(d);
    float sol0 = (-B + d_sqrt) / (2.0f * A);
    float sol1 = (-B - d_sqrt) / (2.0f * A);
-   if (sol0 >= 0.0f && sol1 >= 0.0f)
+   if (sol0 >= twiddle_factor && sol1 >= twiddle_factor)
       return std::min(sol0, sol1);
-   else if (sol0 >= 0.0f && sol1 < 0.0f)
+   else if (sol0 >= twiddle_factor && sol1 < twiddle_factor)
       return sol0;
-   else if (sol0 < 0.0f && sol1 >= 0.0f)
+   else if (sol0 < twiddle_factor && sol1 >= twiddle_factor)
       return sol1;
 
    return 10.0f;
@@ -228,11 +230,11 @@ static inline float line_crash_time(const vec3& pos, const vec3& v, const vec3& 
    float sol1 = (-B - D_sqrt) / (2.0f * A);
 
    float solution;
-   if (sol0 >= 0.0f && sol1 >= 0.0f)
+   if (sol0 >= twiddle_factor && sol1 >= twiddle_factor)
       solution = std::min(sol0, sol1);
-   else if (sol0 >= 0.0f && sol1 < 0.0f)
+   else if (sol0 >= twiddle_factor && sol1 < twiddle_factor)
       solution = sol0;
-   else if (sol0 < 0.0f && sol1 >= 0.0f)
+   else if (sol0 < twiddle_factor && sol1 >= twiddle_factor)
       solution = sol1;
    else
       return 10.0f;
@@ -260,7 +262,7 @@ static void wall_hug_detection(vec3& player_pos)
       float plane_dist = tri.n0 - dot(player_pos, tri.normal); 
 
       // Might be hugging too close.
-      if (plane_dist >= -0.001f && plane_dist < min_dist)
+      if (plane_dist >= -0.01f && plane_dist < min_dist)
       {
          vec3 projected_pos = player_pos + tri.normal * vec3(plane_dist); 
          if (inside_triangle(tri, projected_pos))
@@ -379,7 +381,7 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
          vec3 normal = closest_triangle->normal;
 
          // Move player to wall.
-         player_pos += vec3(0.80f * min_time) * velocity;
+         player_pos += vec3(0.90f * min_time) * velocity;
 
          // Make velocity vector parallel with plane.
          velocity -= vec3(dot(velocity, normal)) * normal;
@@ -390,7 +392,7 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
       else
       {
          // Avoid possible numerical inaccuracies by going fully to crash point.
-         player_pos += vec3(0.80f * min_time) * velocity;
+         player_pos += vec3(0.90f * min_time) * velocity;
          vec3 normal = crash_point - player_pos;
          velocity -= vec3(dot(velocity, normal) / dot(normal, normal)) * normal;
          velocity *= vec3(1.0f - min_time);

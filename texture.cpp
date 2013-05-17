@@ -136,6 +136,36 @@ namespace GL
       unbind();
    }
 
+   void Texture::load_dds(const std::string& path)
+   {
+      if (!tex)
+         SYM(glGenTextures)(1, &tex);
+
+      //retro_stderr_print("Loading DDS: %s.\n", path.c_str());
+      unsigned levels = 0;
+      tex = gli::createTexture2D(path, &levels);
+      //retro_stderr_print("Error: 0x%x\n", SYM(glGetError)());
+
+      bind();
+
+      if (levels == 1)
+      {
+         SYM(glGenerateMipmap)(GL_TEXTURE_2D);
+         SYM(glTexParameteri)(GL_TEXTURE_2D,
+               GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+         SYM(glTexParameteri)(GL_TEXTURE_2D,
+               GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+      }
+
+#ifndef GLES
+      GLint max = 0.0f;
+      SYM(glGetIntegerv)(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max);
+      //retro_stderr_print("Max anisotropy: %d.\n", max);
+      SYM(glTexParameteri)(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
+#endif
+      unbind();
+   }
+
    Texture::Texture(const std::string& path) : tex(0)
    {
       uint8_t* data = NULL;
@@ -144,11 +174,7 @@ namespace GL
       string ext = Path::ext(path);
 
       if (ext == "dds")
-      {
-         retro_stderr_print("Loading DDS: %s.\n", path.c_str());
-         tex = gli::createTexture2D(path);
-         retro_stderr_print("Error: 0x%x\n", SYM(glGetError)());
-      }
+         load_dds(path);
       else
       {
          bool ret = false;

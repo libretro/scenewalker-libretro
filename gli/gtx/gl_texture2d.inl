@@ -164,7 +164,7 @@ namespace detail
 
 }//namespace detail
 
-	inline GLuint createTexture2D(std::string const & Filename)
+	inline GLuint createTexture2D(std::string const & Filename, unsigned *levels)
 	{
 		gli::texture2D Texture(gli::loadStorageDDS(Filename));
 		if(Texture.empty())
@@ -182,10 +182,16 @@ namespace detail
 		GLuint Name = 0;
 		glGenTextures(1, &Name);
 		glBindTexture(GL_TEXTURE_2D, Name);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Texture.levels() > 1 ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Texture.levels() > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		if(gli::bits_per_pixel(Texture.format()) == gli::block_size(Texture.format()))
+      if (levels)
+         *levels = Texture.levels();
+
+      unsigned bpp = gli::bits_per_pixel(Texture.format());
+      unsigned block_size = 8 * gli::block_size(Texture.format());
+
+		if (bpp == block_size)
 		{
 			for(gli::texture2D::size_type Level = 0; Level < Texture.levels(); ++Level)
 			{
