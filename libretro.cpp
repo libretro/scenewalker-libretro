@@ -201,8 +201,10 @@ static inline float point_crash_time(const vec3& pos, const vec3& v, const vec3&
    return 10.0f;
 }
 
-static inline float line_crash_time(const vec3& pos, const vec3& v, const vec3& a, const vec3& b)
+static inline float line_crash_time(const vec3& pos, const vec3& v, const vec3& a, const vec3& b, vec3& crash_pos)
 {
+   crash_pos = vec3(0.0f);
+
    vec3 ab = b - a;
    vec3 d = pos - a;
 
@@ -210,7 +212,7 @@ static inline float line_crash_time(const vec3& pos, const vec3& v, const vec3& 
    float T = dot(ab, v) / ab_sqr;
    float S = dot(ab, d) / ab_sqr;
 
-   vec3 V = v + vec3(T) * ab;
+   vec3 V = v - vec3(T) * ab;
    vec3 W = d - vec3(S) * ab;
 
    float A = dot(V, V);
@@ -238,7 +240,10 @@ static inline float line_crash_time(const vec3& pos, const vec3& v, const vec3& 
    // Check if solution hits the actual line ...
    float k = dot(ab, d + vec3(solution) * v) / ab_sqr;
    if (k >= 0.0f && k <= 1.0f)
-      return k;
+   {
+      crash_pos = a + vec3(k) * ab;
+      return solution;
+   }
    else
       return 10.0f;
 }
@@ -279,10 +284,12 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
    if (velocity == vec3(0.0))
       return;
 
-   vec3 normalized_velocity = normalize(velocity);
+   //vec3 normalized_velocity = normalize(velocity);
 
    float min_time = 1.0f;
    bool crash = false;
+   vec3 crash_point = vec3(0.0f);
+
    const Triangle *closest_triangle = 0;
 
    for (unsigned i = 0; i < triangles.size(); i++)
@@ -309,34 +316,56 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
             }
 
          }
-         else if (plane_dist >= 0.0f && plane_dist < 1.0f)
+         else if (plane_dist >= 0.0f && plane_dist < 1.0f + towards_plane_v) // Can potentially hit vertex ...
          {
-            float dot_wall = dot(normalized_velocity, tri.normal);
+            vec3 crash_pos_tmp;
+            vec3 crash_pos_ab, crash_pos_ac, crash_pos_bc;
 
-            float wall_distance = plane_dist / dot_wall;
-            vec3 projected_direct_pos = player_pos + vec3(wall_distance) * normalized_velocity;
+            // Check how we can hit the triangle. Can hit edges or lines ...
+            float min_time_crash = point_crash_time(player_pos, velocity, tri.a);
+            crash_pos_tmp = tri.a;
 
-            if (inside_triangle(tri, projected_direct_pos))
+            float time_point_b = point_crash_time(player_pos, velocity, tri.b);
+            if (time_point_b < min_time_crash)
             {
-               // Check how we can hit the triangle. Can hit edges or lines ...
-               float time_point_a = point_crash_time(player_pos, velocity, tri.a);
-               float time_point_b = point_crash_time(player_pos, velocity, tri.b);
-               float time_point_c = point_crash_time(player_pos, velocity, tri.c);
+               crash_pos_tmp  = tri.b;
+               min_time_crash = time_point_b;
+            }
 
-               float time_line_ab = line_crash_time(player_pos, velocity, tri.a, tri.b);
-               float time_line_ac = line_crash_time(player_pos, velocity, tri.a, tri.c);
-               float time_line_bc = line_crash_time(player_pos, velocity, tri.b, tri.c);
+            float time_point_c = point_crash_time(player_pos, velocity, tri.c);
+            if (time_point_c < min_time_crash)
+            {
+               crash_pos_tmp  = tri.c;
+               min_time_crash = time_point_c; 
+            }
 
-               float min_time_point = std::min(std::min(time_point_a, time_point_b), time_point_c);
-               float min_time_line  = std::min(std::min(time_line_ab, time_line_bc), time_line_ac);
-               float min_time_crash = std::min(min_time_point, min_time_line);
+            float time_line_ab = line_crash_time(player_pos, velocity, tri.a, tri.b, crash_pos_ab);
+            if (time_line_ab < min_time_crash)
+            {
+               crash_pos_tmp = crash_pos_ab;
+               min_time_crash = time_line_ab;
+            }
 
-               if (min_time_crash < min_time)
-               {
-                  min_time = min_time_crash;
-                  closest_triangle = &tri;
-                  crash = true;
-               }
+            float time_line_ac = line_crash_time(player_pos, velocity, tri.a, tri.c, crash_pos_ac);
+            if (time_line_ac < min_time_crash)
+            {
+               crash_pos_tmp = crash_pos_ac;
+               min_time_crash = time_line_ac;
+            }
+
+            float time_line_bc = line_crash_time(player_pos, velocity, tri.b, tri.c, crash_pos_bc);
+            if (time_line_bc < min_time_crash)
+            {
+               crash_pos_tmp = crash_pos_bc;
+               min_time_crash = time_line_bc;
+            }
+
+            if (min_time_crash < min_time)
+            {
+               min_time = min_time_crash;
+               closest_triangle = &tri;
+               crash = true;
+               crash_point = crash_pos_tmp;
             }
          }
       }
@@ -345,21 +374,26 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
   
    if (closest_triangle)
    {
-      vec3 normal = closest_triangle->normal;
-
       if (!crash)
       {
+         vec3 normal = closest_triangle->normal;
+
          // Move player to wall.
          player_pos += vec3(min_time) * velocity;
 
          // Make velocity vector parallel with plane.
          velocity -= vec3(dot(velocity, normal)) * normal;
-         //retro_stderr_print("Fixup V: %.6f, %.6f, %.6f\n", velocity[0], velocity[1], velocity[2]);
 
+         // Used up some time moving to wall.
          velocity *= vec3(1.0f - min_time);
       }
       else
-         velocity = vec3(0.0f);
+      {
+         player_pos += vec3(0.98f * min_time) * velocity;
+         vec3 normal = crash_point - player_pos;
+         velocity -= vec3(dot(velocity, normal) / dot(normal, normal)) * normal;
+         velocity *= vec3(1.0f - min_time);
+      }
    }
 }
 
@@ -601,6 +635,13 @@ static inline bool fequal(float a, float b)
    return std::fabs(a - b) < 0.0001f;
 }
 
+static inline bool vequal(const vec3& a, const vec3& b)
+{
+   return fequal(a[0], b[0]) &&
+      fequal(a[1], b[1]) &&
+      fequal(a[2], b[2]);
+}
+
 static void test_crash_detection()
 {
    vec3 pos = vec3(0.0f);
@@ -616,6 +657,10 @@ static void test_crash_detection()
 
    float d = point_crash_time(pos, vec3(0, 1, 0), vec3(0.5, 1.0, 0.0));
    assert(fequal(d, 1.0f - std::cos(30.0f / 180.0f * M_PI)));
+
+   vec3 out_pos;
+   float e = line_crash_time(pos, vec3(1, 0, 0), vec3(4, -1, 0), vec3(4, 1, 0), out_pos);
+   assert(fequal(e, 3.0f) && vequal(out_pos, vec3(4, 0, 0)));
 
    retro_stderr_print("Collision tests passed!\n");
 }
