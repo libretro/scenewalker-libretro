@@ -12,7 +12,7 @@ else ifneq ($(findstring win,$(shell uname -a)),)
 endif
 endif
 
-TARGET_NAME := fpswalk
+TARGET_NAME := scenewalker
 
 ifeq ($(platform), unix)
    TARGET := $(TARGET_NAME)_libretro.so
