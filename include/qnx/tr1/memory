@@ -53,6 +53,8 @@ class shared_ptr {
          return *this;
       }
 
+      void reset() { *this = 0; };
+
       T* get() { return ptr; }
       T* operator->() { return ptr; }
       T& operator*()  { return *ptr; }
