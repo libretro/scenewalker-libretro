@@ -32,6 +32,8 @@ static string mesh_path;
 static vector<shared_ptr<Mesh> > meshes;
 static shared_ptr<Texture> blank;
 
+static vec3 player_size(0.5, 1.0, 0.5);
+
 struct Triangle
 {
    vec3 a, b, c;
@@ -404,6 +406,7 @@ static void handle_input()
    static float player_view_deg_y;
    static vec3 player_pos;
 
+
    input_poll_cb();
 
    int analog_x = input_state_cb(0, RETRO_DEVICE_ANALOG,
@@ -451,9 +454,12 @@ static void handle_input()
    vec3 velocity = front_walk_dir * vec3(analog_y * -0.000002f) +
       right_walk_dir * vec3(analog_x * 0.000002f);
 
-   collision_detection(player_pos, velocity);
-   player_pos += velocity;
-   wall_hug_detection(player_pos);
+   vec3 player_pos_espace = player_pos / player_size;
+   vec3 velocity_espace = velocity / player_size;
+
+   collision_detection(player_pos_espace, velocity_espace);
+   player_pos_espace += velocity_espace;
+   wall_hug_detection(player_pos_espace);
 
    static vec3 gravity;
    static bool can_jump;
@@ -466,15 +472,17 @@ static void handle_input()
    gravity[1] -= gravity[1] * 0.01f;
 
    vec3 old_gravity = gravity;
-   collision_detection(player_pos, gravity);
-   if (old_gravity[1] < gravity[1])
+   collision_detection(player_pos_espace, gravity);
+   if (old_gravity[1] != gravity[1])
    {
       gravity = vec3(0.0f);
       can_jump = true;
    }
 
-   player_pos += gravity;
-   wall_hug_detection(player_pos);
+   player_pos_espace += gravity;
+   wall_hug_detection(player_pos_espace);
+
+   player_pos = player_pos_espace * player_size;
 
    mat4 view = lookAt(player_pos, player_pos + look_dir, vec3(0, 1, 0));
 
@@ -597,7 +605,7 @@ static void init_mesh(const string& path)
    shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
    meshes = OBJ::load_from_file(path);
 
-   mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 4.0f / 3.0f, 0.5f, 100.0f);
+   mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 4.0f / 3.0f, 0.2f, 100.0f);
 
    for (unsigned i = 0; i < meshes.size(); i++)
    {
@@ -609,9 +617,9 @@ static void init_mesh(const string& path)
       for (unsigned v = 0; v < vertices.size(); v += 3)
       {
          Triangle tri;
-         tri.a = vertices[v + 0].vert;
-         tri.b = vertices[v + 1].vert;
-         tri.c = vertices[v + 2].vert;
+         tri.a = vertices[v + 0].vert / player_size;
+         tri.b = vertices[v + 1].vert / player_size;
+         tri.c = vertices[v + 2].vert / player_size;
          tri.normal = -normalize(cross(tri.b - tri.a, tri.c - tri.a)); // Make normals point inward. Makes for simpler computation.
          tri.n0 = dot(tri.normal, tri.a); // Plane constant
          triangles.push_back(tri);
