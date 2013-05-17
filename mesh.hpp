@@ -46,7 +46,7 @@ namespace GL
          Mesh();
          ~Mesh();
 
-         std1::shared_ptr<const std::vector<Vertex> > get_vertex() const { return vertex; }
+         std1::shared_ptr<std::vector<Vertex> > get_vertex() const { return vertex; }
          const Material& get_material() const { return material; }
 
          void set_vertices(std::vector<Vertex> vertex);
