@@ -32,7 +32,7 @@ static string mesh_path;
 static vector<shared_ptr<Mesh> > meshes;
 static shared_ptr<Texture> blank;
 
-static vec3 player_size(0.5, 1.0, 0.5);
+static vec3 player_size(0.4f, 0.8f, 0.4f);
 
 struct Triangle
 {
@@ -404,7 +404,7 @@ static void handle_input()
 {
    static float player_view_deg_x;
    static float player_view_deg_y;
-   static vec3 player_pos;
+   static vec3 player_pos(0, 2, 0);
 
 
    input_poll_cb();
