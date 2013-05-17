@@ -286,8 +286,6 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
    if (velocity == vec3(0.0))
       return;
 
-   //vec3 normalized_velocity = normalize(velocity);
-
    float min_time = 1.0f;
    bool crash = false;
    vec3 crash_point = vec3(0.0f);
@@ -381,7 +379,7 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
          vec3 normal = closest_triangle->normal;
 
          // Move player to wall.
-         player_pos += vec3(0.90f * min_time) * velocity;
+         player_pos += vec3(1.0f * min_time) * velocity;
 
          // Make velocity vector parallel with plane.
          velocity -= vec3(dot(velocity, normal)) * normal;
@@ -392,7 +390,7 @@ static void collision_detection(vec3& player_pos, vec3& velocity)
       else
       {
          // Avoid possible numerical inaccuracies by going fully to crash point.
-         player_pos += vec3(0.90f * min_time) * velocity;
+         player_pos += vec3(1.0f * min_time) * velocity;
          vec3 normal = crash_point - player_pos;
          velocity -= vec3(dot(velocity, normal) / dot(normal, normal)) * normal;
          velocity *= vec3(1.0f - min_time);
@@ -420,8 +418,12 @@ static void handle_input()
    int analog_rx = input_state_cb(0, RETRO_DEVICE_ANALOG,
          RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X);
 
-   bool jump = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+   static bool old_jump;
+   bool new_jump = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
          RETRO_DEVICE_ID_JOYPAD_B);
+
+   bool jump = new_jump && !old_jump;
+   old_jump = new_jump;
 
    if (abs(analog_x) < 10000)
       analog_x = 0;
@@ -446,8 +448,8 @@ static void handle_input()
    vec3 right_walk_dir = vec3(rotate_y_right * vec4(0, 0, -1, 1));
    vec3 front_walk_dir = vec3(rotate_y * vec4(0, 0, -1, 1));
 
-   vec3 velocity = front_walk_dir * vec3(analog_y * -0.000001f) +
-      right_walk_dir * vec3(analog_x * 0.000001f);
+   vec3 velocity = front_walk_dir * vec3(analog_y * -0.000002f) +
+      right_walk_dir * vec3(analog_x * 0.000002f);
 
    collision_detection(player_pos, velocity);
    player_pos += velocity;
@@ -467,7 +469,7 @@ static void handle_input()
    collision_detection(player_pos, gravity);
    if (old_gravity[1] < gravity[1])
    {
-      gravity -= gravity * vec3(0.5f);
+      gravity = vec3(0.0f);
       can_jump = true;
    }
 

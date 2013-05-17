@@ -188,10 +188,6 @@ namespace GL
             ret = texture_image_load_tga(path.c_str(),
                   data, width, height);
          }
-         else if (ext == "dds")
-         {
-            return;
-         }
          else
             retro_stderr_print("Unrecognized extension: \"%s\"\n", ext.c_str());
 
