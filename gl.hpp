@@ -15,6 +15,22 @@
 #elif defined(__APPLE__)
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
+#elif defined(__CELLOS_LV2__)
+#include <PSGL/psgl.h>
+#include <PSGL/psglu.h>
+#include <GLES/glext.h>
+extern void _jsEnableVertexAttribArrayNV(GLuint index);
+extern void _jsDisableVertexAttribArrayNV(GLuint index);
+extern void _jsVertexAttribPointerNV(GLuint index,
+      GLint fsize, GLenum type,
+      GLboolean normalized,
+      GLsizei stride, const GLvoid* pointer);
+#define glEnableVertexAttribArray _jsEnableVertexAttribArrayNV
+#define glDisableVertexAttribArray _jsDisableVertexAttribArrayNV
+#define glVertexAttribPointer _jsVertexAttribPointerNV
+#define glGenerateMipmap glGenerateMipmapOES
+#define glBindFramebuffer glBindFramebufferOES
+#define GL_FRAMEBUFFER GL_FRAMEBUFFER_OES
 #else
 #include <GL/gl.h>
 #include <GL/glext.h>

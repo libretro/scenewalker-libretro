@@ -35,7 +35,6 @@ else ifeq ($(platform), ios)
    GLES = 1
 	CXX = clang++ -arch armv7 -isysroot $(IOSSDK)
 	DEFINES := -DIOS
-	CFLAGS += $(DEFINES)
 	CXXFLAGS += $(DEFINES)
 else ifeq ($(platform), qnx)
    TARGET := $(TARGET_NAME)_libretro_qnx.so
@@ -44,8 +43,16 @@ else ifeq ($(platform), qnx)
    CXX = QCC -Vgcc_ntoarmv7le_cpp
    AR = QCC -Vgcc_ntoarmv7le
    GLES = 1
-   INCFLAGS = -Iinclude/qnx
+   INCFLAGS = -Iinclude/compat
    LIBS := -lz
+else ifeq ($(platform), sncps3)
+   TARGET := $(TARGET_NAME)_libretro_ps3.a
+   CC = $(CELL_SDK)/host-win32/sn/bin/ps3ppusnc.exe
+   CXX = $(CELL_SDK)/host-win32/sn/bin/ps3ppusnc.exe
+   AR = $(CELL_SDK)/host-win32/sn/bin/ps3snarl.exe
+   DEFINES := -D__CELLOS_LV2__
+	INCFLAGS = -I. -Iinclude/miniz -Iinclude/compat
+	STATIC_LINKING = 1
 else
    CXX = g++
    TARGET := $(TARGET_NAME)_retro.dll
@@ -56,14 +63,11 @@ else
 endif
 
 CXXFLAGS += $(INCFLAGS)
-CFLAGS += $(INCFLAGS)
 
 ifeq ($(DEBUG), 1)
    CXXFLAGS += -O0 -g
-   CFLAGS += -O0 -g
 else
    CXXFLAGS += -O3
-   CFLAGS += -O3
 endif
 
 ifeq ($(INCLUDE_MINIZ), 1)
@@ -72,12 +76,15 @@ endif
 
 SOURCES := $(wildcard *.cpp) $(wildcard *.c)
 OBJECTS := $(SOURCES:.cpp=.o) $(MINIZ_OBJ:.c=.o)
+
+ifeq ($(platform), sncps3)
+CXXFLAGS += $(fpic)
+else
 CXXFLAGS += -Wall $(fpic)
-CFLAGS += -Wall $(fpic)
+endif
 
 ifeq ($(GLES), 1)
    CXXFLAGS += -DGLES
-   CFLAGS += -DGLES
 ifeq ($(platform), ios)
    LIBS += $(GL_LIB)
 else
@@ -92,13 +99,14 @@ all: $(TARGET)
 HEADERS := $(wildcard *.hpp) $(wildcard *.h)
 
 $(TARGET): $(OBJECTS)
+ifeq ($(STATIC_LINKING), 1)
+	$(AR) rcs $@ $(OBJECTS)
+else
 	$(CXX) $(fpic) $(SHARED) $(INCLUDES) -o $@ $(OBJECTS) $(LIBS) -lm
+endif
 
 %.o: %.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-%.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
