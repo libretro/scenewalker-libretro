@@ -26,6 +26,8 @@
 /// @author Christophe Riccio
 ///////////////////////////////////////////////////////////////////////////////////
 
+#include "../../gl.hpp"
+
 namespace gli{
 namespace detail
 {
@@ -211,7 +213,7 @@ namespace detail
 		{
 			for(gli::texture2D::size_type Level = 0; Level < Texture.levels(); ++Level)
 			{
-				glCompressedTexImage2D(
+				SYM(glCompressedTexImage2D)(
 					GL_TEXTURE_2D,
 					GLint(Level),
 					Desc.Internal,
