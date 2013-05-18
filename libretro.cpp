@@ -436,10 +436,11 @@ static void handle_input()
    if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
             RETRO_DEVICE_ID_JOYPAD_LEFT))
       analog_rx = run_pressed ? -32767 : -16384;
-   else if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
             RETRO_DEVICE_ID_JOYPAD_RIGHT))
       analog_rx = run_pressed ? 32767 : 16384;
-   else if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
             RETRO_DEVICE_ID_JOYPAD_UP))
    {
       if (mouselook_pressed)
@@ -447,7 +448,8 @@ static void handle_input()
       else
          analog_y = run_pressed ? -32767 : -16384;
    }
-   else if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
             RETRO_DEVICE_ID_JOYPAD_DOWN))
    {
       if (mouselook_pressed)
