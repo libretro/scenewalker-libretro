@@ -36,6 +36,13 @@ else ifeq ($(platform), ios)
 	CXX = clang++ -arch armv7 -isysroot $(IOSSDK)
 	DEFINES := -DIOS
 	CXXFLAGS += $(DEFINES)
+else ifeq ($(platform), pi)
+   TARGET := $(TARGET_NAME)_libretro.so
+   fpic := -fPIC
+   SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
+	CXXFLAGS += -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
+	GLES = 1
+	LIBS += -L/opt/vc/lib -lz
 else ifeq ($(platform), qnx)
    TARGET := $(TARGET_NAME)_libretro_qnx.so
    fpic := -fPIC
