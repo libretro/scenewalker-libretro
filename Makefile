@@ -26,23 +26,30 @@ else ifeq ($(platform), osx)
    SHARED := -dynamiclib
    GL_LIB := -framework OpenGL
    LIBS += -lz
-else ifeq ($(platform), ios)
-	TARGET := $(TARGET_NAME)_libretro_ios.dylib
-	fpic := -fpic
-	SHARED := -dynamiclib
-	GL_LIB := -framework OpenGLES
-	LIBS += -lz
-   GLES = 1
-	CXX = clang++ -arch armv7 -isysroot $(IOSSDK)
-	DEFINES := -DIOS
-	CXXFLAGS += $(DEFINES)
 else ifeq ($(platform), pi)
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
    SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
-	CXXFLAGS += -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
-	GLES = 1
-	LIBS += -L/opt/vc/lib -lz
+   CXXFLAGS += -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux -DVIDEOCORE
+   GLES := 1
+   LIBS += -L/opt/vc/lib -lz
+else ifeq ($(platform), ios)
+   TARGET := $(TARGET_NAME)_libretro_ios.dylib
+   fpic := -fpic
+   SHARED := -dynamiclib
+   GL_LIB := -framework OpenGLES
+   LIBS += -lz
+   GLES = 1
+   CXX = clang++ -arch armv7 -isysroot $(IOSSDK)
+   DEFINES := -DIOS
+   CXXFLAGS += $(DEFINES)
+else ifeq ($(platform), pi)
+   TARGET := $(TARGET_NAME)_libretro.so
+   fpic := -fPIC
+   SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
+   CXXFLAGS += -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
+   GLES = 1
+   LIBS += -L/opt/vc/lib -lz
 else ifeq ($(platform), qnx)
    TARGET := $(TARGET_NAME)_libretro_qnx.so
    fpic := -fPIC
@@ -58,8 +65,8 @@ else ifeq ($(platform), sncps3)
    CXX = $(CELL_SDK)/host-win32/sn/bin/ps3ppusnc.exe
    AR = $(CELL_SDK)/host-win32/sn/bin/ps3snarl.exe
    DEFINES := -D__CELLOS_LV2__
-	INCFLAGS = -I. -Iinclude/miniz -Iinclude/compat
-	STATIC_LINKING = 1
+   INCFLAGS = -I. -Iinclude/miniz -Iinclude/compat
+   STATIC_LINKING = 1
 else
    CXX = g++
    TARGET := $(TARGET_NAME)_retro.dll
