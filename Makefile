@@ -73,7 +73,7 @@ else
    SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=link.T -Wl,--no-undefined
    GL_LIB := -lopengl32
    LIBS := -lz
-   INCFLAGS = -Iinclude/win32
+   INCFLAGS = -I. -Iinclude/win32
 endif
 
 CXXFLAGS += $(INCFLAGS)
