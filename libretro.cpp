@@ -428,6 +428,43 @@ static void handle_input()
    bool jump = new_jump && !old_jump;
    old_jump = new_jump;
 
+   bool run_pressed = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+         RETRO_DEVICE_ID_JOYPAD_Y);
+   bool mouselook_pressed = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+         RETRO_DEVICE_ID_JOYPAD_X);
+
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+            RETRO_DEVICE_ID_JOYPAD_LEFT))
+      analog_rx = run_pressed ? -32767 : -16384;
+   else if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+            RETRO_DEVICE_ID_JOYPAD_RIGHT))
+      analog_rx = run_pressed ? 32767 : 16384;
+   else if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+            RETRO_DEVICE_ID_JOYPAD_UP))
+   {
+      if (mouselook_pressed)
+         analog_ry = run_pressed ? -32767 : -16384;
+      else
+         analog_y = run_pressed ? -32767 : -16384;
+   }
+   else if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+            RETRO_DEVICE_ID_JOYPAD_DOWN))
+   {
+      if (mouselook_pressed)
+         analog_ry = run_pressed ? 32767 : 16384;
+      else
+         analog_y = run_pressed ? 32767 : 16384;
+   }
+
+
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+            RETRO_DEVICE_ID_JOYPAD_L))
+      analog_x = run_pressed ? -32767 : -16384;
+
+   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+            RETRO_DEVICE_ID_JOYPAD_R))
+      analog_x = run_pressed ? 32767 : 16384;
+
    if (abs(analog_x) < 10000)
       analog_x = 0;
    if (abs(analog_y) < 10000)
@@ -436,6 +473,13 @@ static void handle_input()
       analog_rx = 0;
    if (abs(analog_ry) < 10000)
       analog_ry = 0;
+
+#if 0
+   fprintf(stderr, "analog_x: %d\n", analog_x);
+   fprintf(stderr, "analog_y: %d\n", analog_y);
+   fprintf(stderr, "analog_rx: %d\n", analog_rx);
+   fprintf(stderr, "analog_ry: %d\n", analog_ry);
+#endif
 
    player_view_deg_y += analog_rx * -0.00008f;
    player_view_deg_x += analog_ry * -0.00005f;
