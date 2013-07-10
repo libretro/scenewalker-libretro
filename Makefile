@@ -18,6 +18,7 @@ ifeq ($(platform), unix)
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
    SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
+   CXXFLAGS += -I.
    GL_LIB := -lGL
    LIBS := -lz
 else ifeq ($(platform), osx)
