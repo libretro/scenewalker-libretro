@@ -69,6 +69,34 @@ else ifeq ($(platform), sncps3)
    DEFINES := -D__CELLOS_LV2__
    INCFLAGS = -I. -Iinclude/miniz -Iinclude/compat
    STATIC_LINKING = 1
+else ifneq (,$(findstring armv,$(platform)))
+   CC = gcc
+   CXX = g++
+   TARGET := $(TARGET_NAME)_libretro.so
+   fpic := -fPIC
+   SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
+   CXXFLAGS += -I.
+ifneq (,$(findstring gles,$(platform)))
+   GLES := 1
+else
+   GL_LIB := -lGL
+endif
+ifneq (,$(findstring cortexa8,$(platform)))
+   CXXFLAGS += -marm -mcpu=cortex-a8
+else ifneq (,$(findstring cortexa9,$(platform)))
+   CXXFLAGS += -marm -mcpu=cortex-a9
+endif
+   CXXFLAGS += -marm
+ifneq (,$(findstring neon,$(platform)))
+   CXXFLAGS += -mfpu=neon
+   HAVE_NEON = 1
+endif
+ifneq (,$(findstring softfloat,$(platform)))
+   CXXFLAGS += -mfloat-abi=softfp
+else ifneq (,$(findstring hardfloat,$(platform)))
+   CXXFLAGS += -mfloat-abi=hard
+endif
+   CXXFLAGS += -DARM
 else
    CXX = g++
    TARGET := $(TARGET_NAME)_libretro.dll
