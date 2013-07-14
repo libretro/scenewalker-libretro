@@ -76,6 +76,7 @@ else ifneq (,$(findstring armv,$(platform)))
    fpic := -fPIC
    SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
    CXXFLAGS += -I.
+   LIBS := -lz
 ifneq (,$(findstring gles,$(platform)))
    GLES := 1
 else
