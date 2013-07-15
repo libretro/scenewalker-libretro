@@ -14,12 +14,16 @@ endif
 
 TARGET_NAME := scenewalker
 
-ifeq ($(platform), unix)
+ifneq (,$(findstring unix,$(platform)))
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
    SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
    CXXFLAGS += -I.
+ifneq (,$(findstring gles,$(platform)))
+   GLES = 1
+else
    GL_LIB := -lGL
+endif
    LIBS := -lz
 else ifeq ($(platform), osx)
    TARGET := $(TARGET_NAME)_libretro.dylib
