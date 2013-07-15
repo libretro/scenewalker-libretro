@@ -102,11 +102,13 @@ else ifneq (,$(findstring hardfloat,$(platform)))
    CXXFLAGS += -mfloat-abi=hard
 endif
    CXXFLAGS += -DARM
-else
+else ifneq (,$(findstring win,$(platform)))
    CXX = g++
    TARGET := $(TARGET_NAME)_libretro.dll
    SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=link.T -Wl,--no-undefined
+ifneq (,$(findstring opengl,$(platform)))
    GL_LIB := -lopengl32
+endif
    LIBS := -lz
    INCFLAGS = -I. -Iinclude/win32
 endif
