@@ -8,7 +8,7 @@
 #include <tr1/memory>
 #endif
 
-#if defined(__QNX__) || defined(__CELLOS_LV2__)
+#if defined(__QNX__) || defined(__CELLOS_LV2__) || defined(IOS)
 namespace std1 = compat;
 #else
 namespace std1 = std::tr1;

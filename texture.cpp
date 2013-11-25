@@ -222,9 +222,9 @@ namespace GL
       SYM(glActiveTexture)(GL_TEXTURE0);
    }
 
-   shared_ptr<Texture> Texture::blank()
+   std1::shared_ptr<Texture> Texture::blank()
    {
-      shared_ptr<Texture> tex(new Texture);
+      std1::shared_ptr<Texture> tex(new Texture);
       uint32_t data = -1;
       tex->upload_data(&data, 1, 1, false);
       return tex;

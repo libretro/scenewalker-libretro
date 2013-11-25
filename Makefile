@@ -49,6 +49,7 @@ else ifeq ($(platform), ios)
    CXX = clang++ -arch armv7 -isysroot $(IOSSDK)
    DEFINES := -DIOS
    CXXFLAGS += $(DEFINES)
+   INCFLAGS = -Iinclude/compat
 else ifeq ($(platform), pi)
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC

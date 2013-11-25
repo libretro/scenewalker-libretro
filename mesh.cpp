@@ -28,7 +28,7 @@ namespace GL
 
    void Mesh::set_vertices(vector<Vertex> vertex)
    {
-      set_vertices(shared_ptr<vector<Vertex> >(new vector<Vertex>(vertex)));
+      set_vertices(std1::shared_ptr<vector<Vertex> >(new vector<Vertex>(vertex)));
    }
 
    void Mesh::set_vertex_type(GLenum type)
@@ -46,7 +46,7 @@ namespace GL
       this->eye_pos = eye_pos;
    }
 
-   void Mesh::set_vertices(const shared_ptr<vector<Vertex> >& vertex)
+   void Mesh::set_vertices(const std1::shared_ptr<vector<Vertex> >& vertex)
    {
       this->vertex = vertex;
 
@@ -61,12 +61,12 @@ namespace GL
       this->material = material;
    }
 
-   void Mesh::set_blank(const shared_ptr<Texture>& blank)
+   void Mesh::set_blank(const std1::shared_ptr<Texture>& blank)
    {
       this->blank = blank;
    }
 
-   void Mesh::set_shader(const shared_ptr<Shader>& shader)
+   void Mesh::set_shader(const std1::shared_ptr<Shader>& shader)
    {
       this->shader = shader;
    }

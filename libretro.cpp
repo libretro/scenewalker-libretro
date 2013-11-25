@@ -32,8 +32,8 @@ static unsigned height = BASE_HEIGHT;
 static struct retro_hw_render_callback hw_render;
 static string mesh_path;
 
-static vector<shared_ptr<Mesh> > meshes;
-static shared_ptr<Texture> blank;
+static vector<std1::shared_ptr<Mesh> > meshes;
+static std1::shared_ptr<Texture> blank;
 
 static vec3 player_size(0.4f, 0.8f, 0.4f);
 
@@ -653,7 +653,7 @@ static void init_mesh(const string& path)
       "  gl_FragColor = vec4(diffuse + ambient + specular, uMTLAlphaMod * colorDiffuseFull.a);\n"
       "}";
 
-   shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
+   std1::shared_ptr<Shader> shader(new Shader(vertex_shader, fragment_shader));
    meshes = OBJ::load_from_file(path);
 
    mat4 projection = scale(mat4(1.0), vec3(1, -1, 1)) * perspective(45.0f, 4.0f / 3.0f, 0.2f, 100.0f);

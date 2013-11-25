@@ -108,7 +108,7 @@ namespace OBJ
       }
    }
 
-   static map<string, Material> parse_mtllib(const string& path, map<string, shared_ptr<Texture> >& textures)
+   static map<string, Material> parse_mtllib(const string& path, map<string, std1::shared_ptr<Texture> >& textures)
    {
       map<string, Material> materials;
 
@@ -152,7 +152,7 @@ namespace OBJ
             if (!textures[data])
             {
                string diffuse_path = Path::join(Path::basedir(path), data);
-               textures[data] = shared_ptr<Texture>(new Texture(diffuse_path));
+               textures[data] = std1::shared_ptr<Texture>(new Texture(diffuse_path));
             }
 
             current.diffuse_map = textures[data];
@@ -162,7 +162,7 @@ namespace OBJ
             if (!textures[data])
             {
                string ambient_path = Path::join(Path::basedir(path), data);
-               textures[data] = shared_ptr<Texture>(new Texture(ambient_path));
+               textures[data] = std1::shared_ptr<Texture>(new Texture(ambient_path));
             }
 
             current.ambient_map = textures[data];
@@ -174,10 +174,10 @@ namespace OBJ
       return materials;
    }
 
-   vector<shared_ptr<Mesh> > load_from_file(const string& path)
+   vector<std1::shared_ptr<Mesh> > load_from_file(const string& path)
    {
       ifstream file(path.c_str(), ios::in);
-      vector<shared_ptr<Mesh> > meshes;
+      vector<std1::shared_ptr<Mesh> > meshes;
       if (!file.is_open())
          return meshes;
 
@@ -188,7 +188,7 @@ namespace OBJ
       vector<Vertex> vertices;
 
       // Texture cache.
-      map<string, shared_ptr<Texture> > textures;
+      map<string, std1::shared_ptr<Texture> > textures;
       Material current_material;
 
       map<string, Material> materials;
@@ -213,7 +213,7 @@ namespace OBJ
          {
             if (vertices.size()) // Different texture, new mesh.
             {
-               shared_ptr<Mesh> mesh(new Mesh());
+               std1::shared_ptr<Mesh> mesh(new Mesh());
                mesh->set_vertices(vertices);
                vertices.clear();
 
@@ -224,7 +224,7 @@ namespace OBJ
             if (!textures[data])
             {
                string texture_path = Path::join(Path::basedir(path), data + ".png");
-               textures[data] = shared_ptr<Texture>(new Texture(texture_path));
+               textures[data] = std1::shared_ptr<Texture>(new Texture(texture_path));
             }
 
             current_material = Material();
@@ -235,7 +235,7 @@ namespace OBJ
          {
             if (vertices.size()) // Different texture, new mesh.
             {
-               shared_ptr<Mesh> mesh(new Mesh());
+               std1::shared_ptr<Mesh> mesh(new Mesh());
                mesh->set_vertices(vertices);
                vertices.clear();
 
@@ -251,7 +251,7 @@ namespace OBJ
 
       if (vertices.size())
       {
-         shared_ptr<Mesh> mesh(new Mesh());
+         std1::shared_ptr<Mesh> mesh(new Mesh());
          mesh->set_vertices(vertices);
          vertices.clear();
 
