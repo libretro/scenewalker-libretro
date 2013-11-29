@@ -46,9 +46,9 @@ else ifeq ($(platform), ios)
    GL_LIB := -framework OpenGLES
    LIBS += -lz
    GLES = 1
-   CXX = clang++ -arch armv7 -isysroot $(IOSSDK)
+   CXX = clang++ -arch armv7 -isysroot $(IOSSDK) -miphoneos-version-min=5.0
    DEFINES := -DIOS
-   CXXFLAGS += $(DEFINES)
+   CXXFLAGS += $(DEFINES) -miphoneos-version-min=5.0
    INCFLAGS = -Iinclude/compat
 else ifeq ($(platform), pi)
    TARGET := $(TARGET_NAME)_libretro.so
