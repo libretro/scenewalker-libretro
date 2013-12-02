@@ -31,7 +31,9 @@ else ifneq (,$(findstring osx,$(platform)))
    SHARED := -dynamiclib
    GL_LIB := -framework OpenGL
    LIBS += -lz
-   INCFLAGS += -I.
+   DEFINES := -DOSX
+   CXXFLAGS += $(DEFINES)
+   INCFLAGS += -I. -Iinclude/compat
 else ifeq ($(platform), pi)
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
