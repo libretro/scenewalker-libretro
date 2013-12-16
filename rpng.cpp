@@ -32,7 +32,8 @@
 
 #undef GOTO_END_ERROR
 #define GOTO_END_ERROR() do { \
-   fprintf(stderr, "[RPNG]: Error in line %d.\n", __LINE__); \
+   if (log_cb) \
+      log_cb(RETRO_LOG_ERROR, "[RPNG]: Error in line %d.\n", __LINE__); \
    ret = false; \
    goto end; \
 } while(0)

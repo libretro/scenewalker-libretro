@@ -18,6 +18,7 @@
 #ifndef SHARED_HPP__
 #define SHARED_HPP__
 
+#include "libretro.h"
 #ifdef _MSC_VER
 #include <memory>
 #define snprintf _snprintf
@@ -31,8 +32,7 @@ namespace std1 = compat;
 namespace std1 = std::tr1;
 #endif
 
-void retro_stderr(const char *str);
-void retro_stderr_print(const char *fmt, ...);
+extern retro_log_printf_t log_cb;
 
 #endif
 

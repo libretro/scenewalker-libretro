@@ -46,7 +46,8 @@ namespace GL
             GLsizei out_len;
             SYM(glGetProgramInfoLog)(prog, len, &out_len, &buf[0]);
 
-            retro_stderr_print("Link error: %s\n", &buf[0]);
+            if (log_cb)
+               log_cb(RETRO_LOG_ERROR, "Link error: %s\n", &buf[0]);
          }
       }
    }
@@ -72,7 +73,8 @@ namespace GL
             GLsizei out_len;
             SYM(glGetShaderInfoLog)(shader, len, &out_len, &buf[0]);
 
-            retro_stderr_print("Shader error: %s\n", &buf[0]);
+            if (log_cb)
+               log_cb(RETRO_LOG_ERROR, "Shader error: %s\n", &buf[0]);
          }
 
          SYM(glDeleteShader)(shader);

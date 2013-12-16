@@ -37,7 +37,8 @@ static bool texture_image_load_tga(const char *path,
    FILE *file = fopen(path, "rb");
    if (!file)
    {
-      retro_stderr_print("Failed to open image: %s.\n", path);
+      if (log_cb)
+         log_cb(RETRO_LOG_ERROR, "Failed to open image: %s.\n", path);
       return false;
    }
 
@@ -57,7 +58,8 @@ static bool texture_image_load_tga(const char *path,
 
    if (buffer[2] != 2) // Uncompressed RGB
    {
-      retro_stderr_print("TGA image is not uncompressed RGB.\n");
+      if (log_cb)
+         log_cb(RETRO_LOG_ERROR, "TGA image is not uncompressed RGB.\n");
       free(buffer);
       return false;
    }
@@ -69,13 +71,15 @@ static bool texture_image_load_tga(const char *path,
    height = info[2] + ((unsigned)info[3] * 256);
    unsigned bits = info[4];
 
-   retro_stderr_print("Loaded TGA: (%ux%u @ %u bpp)\n", width, height, bits);
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "Loaded TGA: (%ux%u @ %u bpp)\n", width, height, bits);
 
    unsigned size = width * height * sizeof(uint32_t);
    data = (uint8_t*)malloc(size);
    if (!data)
    {
-      retro_stderr_print("Failed to allocate TGA pixels.\n");
+      if (log_cb)
+         log_cb(RETRO_LOG_ERROR, "Failed to allocate TGA pixels.\n");
       free(buffer);
       return false;
    }
@@ -103,7 +107,8 @@ static bool texture_image_load_tga(const char *path,
    }
    else
    {
-      retro_stderr_print("Bit depth of TGA image is wrong. Only 32-bit and 24-bit supported.\n");
+      if (log_cb)
+         log_cb(RETRO_LOG_ERROR, "Bit depth of TGA image is wrong. Only 32-bit and 24-bit supported.\n");
       free(buffer);
       free(data);
       return false;
@@ -141,7 +146,8 @@ namespace GL
 #ifndef GLES
          GLint max = 0.0f;
          SYM(glGetIntegerv)(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max);
-         retro_stderr_print("Max anisotropy: %d.\n", max);
+         if (log_cb)
+            log_cb(RETRO_LOG_INFO, "Max anisotropy: %d.\n", max);
          SYM(glTexParameteri)(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
 #endif
       }
@@ -162,10 +168,10 @@ namespace GL
       if (!tex)
          SYM(glGenTextures)(1, &tex);
 
-      //retro_stderr_print("Loading DDS: %s.\n", path.c_str());
+      if (log_cb)
+         log_cb(RETRO_LOG_INFO, "Loading DDS: %s.\n", path.c_str());
       unsigned levels = 0;
       tex = gli::createTexture2D(path, &levels);
-      //retro_stderr_print("Error: 0x%x\n", SYM(glGetError)());
 
       bind();
 
@@ -180,7 +186,10 @@ namespace GL
 
       GLint max = 0.0f;
       SYM(glGetIntegerv)(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max);
-      //retro_stderr_print("Max anisotropy: %d.\n", max);
+
+      if (log_cb)
+         log_cb(RETRO_LOG_INFO, "Max anisotropy: %d.\n", max);
+
       SYM(glTexParameteri)(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
       unbind();
    }
@@ -210,16 +219,16 @@ namespace GL
             ret = texture_image_load_tga(path.c_str(),
                   data, width, height);
          }
-         else
-            retro_stderr_print("Unrecognized extension: \"%s\"\n", ext.c_str());
+         else if (log_cb)
+            log_cb(RETRO_LOG_ERROR, "Unrecognized extension: \"%s\"\n", ext.c_str());
 
          if (ret)
          {
             upload_data(data, width, height, true);
             free(data);
          }
-         else
-            retro_stderr_print("Failed to load image: %s\n", path.c_str());
+         else if (log_cb)
+            log_cb(RETRO_LOG_ERROR, "Failed to load image: %s\n", path.c_str());
       }
    }
 

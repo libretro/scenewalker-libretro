@@ -47,6 +47,14 @@ static unsigned width = BASE_WIDTH;
 static unsigned height = BASE_HEIGHT;
 
 static struct retro_hw_render_callback hw_render;
+retro_log_printf_t log_cb;
+static retro_video_refresh_t video_cb;
+static retro_audio_sample_t audio_cb;
+static retro_audio_sample_batch_t audio_batch_cb;
+static retro_environment_t environ_cb;
+static retro_input_poll_t input_poll_cb;
+static retro_input_state_t input_state_cb;
+
 static string mesh_path;
 
 static vector<std1::shared_ptr<Mesh> > meshes;
@@ -60,10 +68,17 @@ struct Triangle
    vec3 normal;
    float n0;
 };
+
 static vector<Triangle> triangles;
 
 void retro_init(void)
-{}
+{
+   struct retro_log_callback log;
+
+   environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log);
+   if (log.log)
+      log_cb = log.log;
+}
 
 void retro_deinit(void)
 {}
@@ -97,39 +112,12 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    info->geometry.max_height  = MAX_HEIGHT;
 }
 
-static retro_video_refresh_t video_cb;
-static retro_audio_sample_t audio_cb;
-static retro_audio_sample_batch_t audio_batch_cb;
-static retro_environment_t environ_cb;
-static retro_input_poll_t input_poll_cb;
-static retro_input_state_t input_state_cb;
 
 #ifdef ANDROID
 #include <android/log.h>
 #endif
 
 #include <stdarg.h>
-
-void retro_stderr(const char *str)
-{
-#if defined(_WIN32)
-   OutputDebugStringA(str);
-#elif defined(ANDROID)
-   __android_log_print(ANDROID_LOG_INFO, "ModelViewer: ", "%s", str);
-#else
-   fputs(str, stderr);
-#endif
-}
-
-void retro_stderr_print(const char *fmt, ...)
-{
-   char buf[1024];
-   va_list list;
-   va_start(list, fmt);
-   vsprintf(buf, fmt, list); // Unsafe, but vsnprintf isn't in C++03 :(
-   va_end(list);
-   retro_stderr(buf);
-}
 
 void retro_set_environment(retro_environment_t cb)
 {
@@ -299,7 +287,10 @@ static void wall_hug_detection(vec3& player_pos)
 
    if (closest_triangle_hug)
    {
-      //retro_stderr_print("Fixup hugging: Dist: %.6f.\n", min_dist);
+#if 0
+      if (log_cb)
+         log_cb(RETRO_LOG_INFO, "Fixup hugging: Dist: %.6f.\n", min_dist);
+#endif
       // Push player out.
       player_pos += vec3(min_dist - 1.0f) * closest_triangle_hug->normal;
    }
@@ -499,10 +490,13 @@ static void handle_input()
       analog_ry = 0;
 
 #if 0
-   fprintf(stderr, "analog_x: %d\n", analog_x);
-   fprintf(stderr, "analog_y: %d\n", analog_y);
-   fprintf(stderr, "analog_rx: %d\n", analog_rx);
-   fprintf(stderr, "analog_ry: %d\n", analog_ry);
+   if (log_cb)
+   {
+      log_cb(RETRO_LOG_INFO, "analog_x: %d\n", analog_x);
+      log_cb(RETRO_LOG_INFO, "analog_y: %d\n", analog_y);
+      log_cb(RETRO_LOG_INFO, "analog_rx: %d\n", analog_rx);
+      log_cb(RETRO_LOG_INFO, "analog_ry: %d\n", analog_ry);
+   }
 #endif
 
    player_view_deg_y += analog_rx * -0.00008f;
@@ -576,7 +570,8 @@ static void update_variables()
 
    width = String::stoi(list[0]);
    height = String::stoi(list[1]);
-   retro_stderr_print("Internal resolution: %u x %u\n", width, height);
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "Internal resolution: %u x %u\n", width, height);
 }
 
 void retro_run(void)
@@ -610,7 +605,8 @@ void retro_run(void)
 
 static void init_mesh(const string& path)
 {
-   retro_stderr("Loading Mesh ...\n");
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "Loading Mesh ...\n");
 
    static const string vertex_shader =
       "uniform mat4 uModel;\n"
@@ -743,7 +739,8 @@ static void test_crash_detection()
    float e = line_crash_time(pos, vec3(1, 0, 0), vec3(4, -1, 0), vec3(4, 1, 0), out_pos);
    assert(fequal(e, 3.0f) && vequal(out_pos, vec3(4, 0, 0)));
 
-   retro_stderr_print("Collision tests passed!\n");
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "Collision tests passed!\n");
 }
 
 bool retro_load_game(const struct retro_game_info *info)
@@ -751,7 +748,8 @@ bool retro_load_game(const struct retro_game_info *info)
    enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
    if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
    {
-      retro_stderr("XRGB8888 is not supported.");
+      if (log_cb)
+         log_cb(RETRO_LOG_ERROR, "XRGB8888 is not supported.");
       return false;
    }
 
