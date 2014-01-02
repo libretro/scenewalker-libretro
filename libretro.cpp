@@ -75,9 +75,10 @@ void retro_init(void)
 {
    struct retro_log_callback log;
 
-   environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log);
-   if (log.log)
+   if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
       log_cb = log.log;
+   else
+      log_cb = NULL;
 }
 
 void retro_deinit(void)
