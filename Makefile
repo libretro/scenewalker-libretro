@@ -14,6 +14,8 @@ endif
 
 TARGET_NAME := scenewalker
 
+INCFLAGS += -I. -Iengine
+
 ifneq (,$(findstring unix,$(platform)))
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
@@ -33,7 +35,7 @@ else ifneq (,$(findstring osx,$(platform)))
    LIBS += -lz
    DEFINES := -DOSX
    CXXFLAGS += $(DEFINES)
-   INCFLAGS += -I. -Iinclude/compat
+   INCFLAGS += -Iinclude/compat
 else ifeq ($(platform), pi)
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
@@ -51,7 +53,7 @@ else ifeq ($(platform), ios)
    CXX = clang++ -arch armv7 -isysroot $(IOSSDK) -miphoneos-version-min=5.0
    DEFINES := -DIOS
    CXXFLAGS += $(DEFINES) -miphoneos-version-min=5.0
-   INCFLAGS = -Iinclude/compat
+   INCFLAGS += -Iinclude/compat
 else ifeq ($(platform), pi)
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
@@ -66,7 +68,7 @@ else ifeq ($(platform), qnx)
    CXX = QCC -Vgcc_ntoarmv7le_cpp
    AR = QCC -Vgcc_ntoarmv7le
    GLES = 1
-   INCFLAGS = -Iinclude/compat
+   INCFLAGS += -Iinclude/compat
    LIBS := -lz
 else ifeq ($(platform), sncps3)
    TARGET := $(TARGET_NAME)_libretro_ps3.a
@@ -74,7 +76,7 @@ else ifeq ($(platform), sncps3)
    CXX = $(CELL_SDK)/host-win32/sn/bin/ps3ppusnc.exe
    AR = $(CELL_SDK)/host-win32/sn/bin/ps3snarl.exe
    DEFINES := -D__CELLOS_LV2__
-   INCFLAGS = -I. -Iinclude/miniz -Iinclude/compat
+   INCFLAGS += -Iinclude/compat
    STATIC_LINKING = 1
 else ifneq (,$(findstring armv,$(platform)))
    CC = gcc
@@ -113,7 +115,7 @@ ifneq (,$(findstring opengl,$(platform)))
    GL_LIB := -lopengl32
 endif
    LIBS := -lz
-   INCFLAGS = -I. -Iinclude/win32
+   INCFLAGS += -Iinclude/win32
 endif
 
 CXXFLAGS += $(INCFLAGS)
@@ -124,12 +126,8 @@ else
    CXXFLAGS += -O3
 endif
 
-ifeq ($(INCLUDE_MINIZ), 1)
-MINIZ_OBJ := msvc/deps/miniz/miniz.c
-endif
-
-SOURCES := $(wildcard *.cpp) $(wildcard *.c)
-OBJECTS := $(SOURCES:.cpp=.o) $(MINIZ_OBJ:.c=.o)
+SOURCES := $(wildcard *.cpp) $(wildcard engine/*.cpp) $(wildcard *.c)
+OBJECTS := $(SOURCES:.cpp=.o)
 
 ifeq ($(platform), sncps3)
 CXXFLAGS += $(fpic)
