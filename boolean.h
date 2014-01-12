@@ -13,24 +13,11 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RPNG_H__
-#define RPNG_H__
+#ifndef __RARCH_BOOLEAN_H
+#define __RARCH_BOOLEAN_H
 
-#include <stdint.h>
-#include "boolean.h"
-
-// Modified version of RetroArch's PNG loader.
-// Uses bottom-left origin rather than top-left.
-// Also outputs RGBA byte order to work on GLES without extensions (GL_RGBA, GL_UNSIGNED_BYTE).
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-bool rpng_load_image_rgba(const char *path, uint8_t **data, unsigned *width, unsigned *height);
-
-#ifdef __cplusplus
-}
+#ifndef __cplusplus
+#include <stdbool.h>
 #endif
 
 #endif
