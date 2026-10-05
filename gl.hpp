@@ -60,7 +60,7 @@ extern void _jsVertexAttribPointerNV(GLuint index,
 #include "shared.hpp"
 
 #ifdef __GNUC__
-#define decltype(type) typeof(type)
+#define GL_DECLTYPE(type) typeof(type)
 #endif
 
 #ifdef GLES

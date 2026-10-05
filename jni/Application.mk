@@ -1,4 +1,4 @@
 APP_ABI := all
-APP_STL := gnustl_static
-APP_PLATFORM := android-9
+APP_STL := c++_static
+APP_PLATFORM := android-21
 
