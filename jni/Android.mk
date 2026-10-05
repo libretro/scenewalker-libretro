@@ -1,5 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 
+CORE_DIR := $(LOCAL_PATH)/..
+
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := retro
@@ -17,7 +19,9 @@ ifeq ($(TARGET_ARCH),mips)
 LOCAL_CFLAGS += -DANDROID_MIPS
 endif
 
-INCFLAGS = -I../ -I../engine
+INCFLAGS := -I../ -I../engine
+INCFLAGS += -I$(CORE_DIR)/include/compat
+
 LOCAL_SRC_FILES += $(wildcard ../*.cpp) $(wildcard ../engine/*.cpp) $(wildcard ../*.c)
 LOCAL_CXXFLAGS += -O2 -Wall -ffast-math -fexceptions -DGLES -DANDROID $(INCFLAGS)
 LOCAL_CFLAGS += $(INCFLAGS)

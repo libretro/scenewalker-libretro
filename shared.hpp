@@ -18,21 +18,23 @@
 #ifndef SHARED_HPP__
 #define SHARED_HPP__
 
-#include "libretro.h"
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #include <memory>
+#ifdef _MSC_VER
 #define snprintf _snprintf
+#endif
 #else
 #include <tr1/memory>
 #endif
 
-#if defined(__QNX__) || defined(__CELLOS_LV2__) || defined(IOS) || defined(OSX)
+#if defined(__QNX__) || defined(IOS) || defined(OSX) || defined(EMSCRIPTEN) || defined(__EMSCRIPTEN__) || defined(ANDROID)
 namespace std1 = compat;
 #else
 namespace std1 = std::tr1;
 #endif
 
+#include <libretro.h>
+
 extern retro_log_printf_t log_cb;
 
 #endif
-
